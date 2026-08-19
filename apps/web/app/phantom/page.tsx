@@ -152,7 +152,7 @@ export default function PhantomPage() {
               <LoadingState title="Loading report" description="Fetching analysis detail." />
             ) : null}
             {selectedAnalysis.data ? (
-              <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-2xl bg-black/20 p-4 text-xs leading-6 text-[var(--foreground)]">
+              <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-md bg-[var(--surface-inset)] p-4 text-xs leading-6 text-[var(--foreground)]">
                 {selectedAnalysis.data.report_markdown}
               </pre>
             ) : null}

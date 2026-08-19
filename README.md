@@ -66,9 +66,9 @@ python -m venv .venv
 
 pip install -r requirements-dev.txt   # editable install of every workspace package
 
-# Create your first user (needed for the recon module's auth). This prints
-# an API key, shown once — paste it into the dashboard's "Set API key"
-# control in the topbar.
+# Create your first user - every module's routes require this key now
+# (only /api/v1/health is public). This prints an API key, shown once —
+# paste it into the dashboard's "Set API key" control in the topbar.
 seclab users create alice --role security_lead
 
 # Terminal 1 — gateway
@@ -170,22 +170,37 @@ reduce the number of concurrent lookups in a single analysis.
 
 ## Security notes
 
+- Every route the gateway mounts requires a valid API key
+  (`Depends(get_current_user)`, enforced once at the mount point in
+  `seclab_gateway.registry.mount_routers` so a new module or route can't
+  ship unauthenticated by accident) — only `/api/v1/health` is public.
+  `/docs`, `/redoc`, and `/openapi.json` are disabled too, so the route
+  and schema surface isn't browsable without a key either.
 - API keys are hashed with HMAC-SHA256 and a server-side pepper
   (`seclab.security.keys`), not unsalted SHA-256 like the original
-  scopepilot.
+  scopepilot. The gateway and CLI refuse to start if
+  `SECLAB_API_KEY_PEPPER` is missing or left at its placeholder value.
+- The gateway's rate limit (`rate_limit_default`, 60/minute by default) is
+  enforced on every request via `SlowAPIMiddleware`.
 - All outbound HTTP goes through `seclab.core.http.HttpProvider`, which
-  blocks private/loopback/link-local IP ranges and revalidates every
-  redirect hop against the same policy before following it — so a
-  malicious or compromised redirect can't be used to reach internal
-  infrastructure.
+  resolves each destination once, rejects anything that isn't a public IP
+  (blocking private/loopback/link-local/multicast/CGNAT ranges by
+  construction instead of an enumerated list), and connects directly to
+  that validated address — closing the DNS-rebinding window a
+  resolve-then-connect design would otherwise leave open. Every redirect
+  hop is re-validated the same way before it's followed.
 - No module can treat a target as authorized without an explicit allowlist
   match (`seclab.security.scope_guard`) — missing allowlist means nothing
   is in scope, by design (fail-closed).
 - Every scope decision, approval decision, and execution is written to the
   audit log (`seclab.security.audit`) and, where relevant, the evidence
   store (`seclab.security.evidence`) with a SHA-256 content hash.
+- A hypothesis's `required_role` is a real enum, not free text — an
+  unrecognized role is rejected outright instead of silently ranking as
+  the weakest possible approver.
 - The honeypot sensor never holds credentials to the lab's database and
-  runs on an isolated Docker network.
+  runs on an isolated Docker network. Evidence it captures (CT-matched
+  domain names) is filename-sanitized before being written to disk.
 
 ## Roadmap
 

@@ -18,7 +18,7 @@ export function LoadingState({
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton key={index} className="h-40 rounded-[28px]" />
+          <Skeleton key={index} className="h-40 rounded-lg" />
         ))}
       </div>
       <Card>
@@ -72,7 +72,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Card className="fine-grid border-[var(--border-subtle)]">
+    <Card className="border-[var(--border-subtle)]">
       <CardHeader>
         <p className="eyebrow">Nothing to review yet</p>
         <CardTitle>{title}</CardTitle>

@@ -54,18 +54,18 @@ export function SidebarNav({ mobile = false }: { mobile?: boolean }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "group flex shrink-0 items-start gap-4 rounded-[22px] border px-4 py-4 transition-colors",
+              "group flex shrink-0 items-start gap-4 rounded-lg border px-4 py-4 transition-colors",
               active
                 ? "border-[var(--border-accent)] bg-[var(--surface-selected)]"
-                : "border-transparent bg-transparent hover:border-[var(--border-subtle)] hover:bg-white/[0.04]",
+                : "border-transparent bg-transparent hover:border-[var(--border-subtle)] hover:bg-[var(--surface-hover)]",
             )}
           >
             <div
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-2xl text-xs font-bold tracking-[0.2em]",
+                "flex h-10 w-10 items-center justify-center rounded-md text-xs font-bold tracking-[0.2em]",
                 active
                   ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
-                  : "border border-[var(--border-subtle)] bg-white/[0.045] text-white/75",
+                  : "border border-[var(--border-subtle)] bg-[var(--surface-inset)] text-[var(--muted-foreground)]",
               )}
             >
               {item.glyph}

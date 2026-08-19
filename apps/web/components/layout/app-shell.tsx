@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="space-y-8">
             <div className="space-y-4 p-1">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-[var(--border-accent)] bg-[var(--accent-soft)] text-sm font-bold tracking-[-0.04em] text-teal-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[var(--border-accent)] bg-[var(--accent-soft)] text-sm font-bold tracking-[-0.04em] text-teal-100">
                   SL
                 </div>
                 <div>
