@@ -1,7 +1,9 @@
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_API_KEY_PEPPER = "change-me-in-.env"
 
 
 class Settings(BaseSettings):
@@ -28,7 +30,7 @@ class Settings(BaseSettings):
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     rate_limit_default: str = "60/minute"
 
-    api_key_pepper: SecretStr = Field(default=SecretStr("change-me-in-.env"))
+    api_key_pepper: SecretStr = Field(default=SecretStr(DEFAULT_API_KEY_PEPPER))
 
     crtsh_base_url: str = "https://crt.sh/"
     rdap_base_url: str = "https://rdap.org/domain/"
@@ -41,6 +43,21 @@ class Settings(BaseSettings):
     discord_webhook_url: SecretStr | None = Field(default=None)
 
     certstream_url: str = "wss://certstream.calidog.io/"
+
+    @model_validator(mode="after")
+    def _reject_default_pepper(self) -> "Settings":
+        # Every api_key_hash is HMAC(pepper, raw_key) (see seclab.security.keys)
+        # - the whole point of the pepper is that it's a secret unknown to
+        # anyone who only has DB access. Silently starting with the shipped
+        # placeholder makes every hash forgeable by anyone who reads this
+        # file, defeating that guarantee. Set a real value:
+        #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+        if self.api_key_pepper.get_secret_value() == DEFAULT_API_KEY_PEPPER:
+            raise ValueError(
+                "SECLAB_API_KEY_PEPPER is unset or still the default placeholder. "
+                "Set a real secret (see .env.example) before starting."
+            )
+        return self
 
 
 @lru_cache(maxsize=1)
