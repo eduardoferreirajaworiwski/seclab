@@ -1,0 +1,9 @@
+# Editable install of all workspace packages, with dev extras.
+# Usage: pip install -r requirements-dev.txt
+-e packages/seclab-core[dev]
+-e packages/modules/phantom[dev]
+-e packages/modules/recon[dev]
+-e packages/modules/monitor[dev]
+-e packages/modules/sensor_chimera[dev]
+-e apps/gateway[dev]
+-e apps/cli[dev]

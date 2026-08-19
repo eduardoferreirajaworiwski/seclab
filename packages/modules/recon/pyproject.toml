@@ -1,0 +1,36 @@
+[project]
+name = "seclab-recon"
+version = "0.1.0"
+description = "Authorized bug-bounty workflow module for seclab, ported from scopepilot: program -> target (scope-checked) -> hypothesis -> human approval -> execution -> finding, with fail-closed audit at every step."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "seclab-core",
+  "fastapi>=0.115.0,<1.0.0",
+  "pydantic>=2.8.0,<3.0.0",
+  "sqlalchemy>=2.0.30,<3.0.0",
+  "typer>=0.12.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0,<9.0.0",
+  "ruff>=0.6.0,<1.0.0",
+]
+
+[tool.uv.sources]
+seclab-core = { path = "../../seclab-core", editable = true }
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

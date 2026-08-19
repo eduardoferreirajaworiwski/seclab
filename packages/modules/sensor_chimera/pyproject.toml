@@ -1,0 +1,36 @@
+[project]
+name = "seclab-sensor-chimera"
+version = "0.1.0"
+description = "Active-deception honeypot sensor for seclab, ported from project-chimera: fingerprints scanners, tarpits them, serves decoy secrets, and emits hits to the shared seclab event bus."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "seclab-core",
+  "fastapi>=0.115.0,<1.0.0",
+  "uvicorn[standard]>=0.30.0,<1.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "slowapi>=0.1.9,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0,<9.0.0",
+  "ruff>=0.6.0,<1.0.0",
+]
+
+[tool.uv.sources]
+seclab-core = { path = "../../seclab-core", editable = true }
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

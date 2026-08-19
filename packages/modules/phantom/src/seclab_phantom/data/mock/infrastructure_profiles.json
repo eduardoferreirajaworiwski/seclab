@@ -1,0 +1,65 @@
+{
+  "login": {
+    "ip_addresses": [
+      "198.51.100.23"
+    ],
+    "name_servers": [
+      "ns1.fast-edge-hosting.test",
+      "ns2.fast-edge-hosting.test"
+    ],
+    "rdap_org": "Privacy Protected LLC",
+    "registrar": "Namecheap",
+    "asn": "AS64500",
+    "asn_org": "Demo VPS Provider",
+    "hosted_country": "US",
+    "reputation_tags": [
+      "credential-harvest-theme",
+      "fresh-lookalike"
+    ]
+  },
+  "secure": {
+    "ip_addresses": [
+      "203.0.113.55"
+    ],
+    "name_servers": [
+      "ns1.brand-abuse-edge.test",
+      "ns2.brand-abuse-edge.test"
+    ],
+    "rdap_org": "Privacy Protected LLC",
+    "registrar": "Porkbun",
+    "asn": "AS64550",
+    "asn_org": "Disposable Hosting Network",
+    "hosted_country": "NL",
+    "reputation_tags": [
+      "brand-abuse-lure",
+      "recent-hosting-pattern"
+    ]
+  },
+  "verify": {
+    "ip_addresses": [
+      "198.51.100.88"
+    ],
+    "name_servers": [
+      "ns1.account-review-node.test",
+      "ns2.account-review-node.test"
+    ],
+    "rdap_org": "Hidden Registrant Services",
+    "registrar": "NameSilo",
+    "asn": "AS64560",
+    "asn_org": "Identity Gate Hosting",
+    "hosted_country": "SG",
+    "reputation_tags": [
+      "credential-harvest-theme"
+    ]
+  },
+  "fallback": {
+    "ip_addresses": [],
+    "name_servers": [],
+    "rdap_org": "Example Corp",
+    "registrar": "Cloudflare",
+    "asn": null,
+    "asn_org": null,
+    "hosted_country": null,
+    "reputation_tags": []
+  }
+}

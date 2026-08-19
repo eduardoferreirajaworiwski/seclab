@@ -1,0 +1,73 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      SECLAB_ENV: dev
+      SECLAB_OFFLINE_MODE: "true"
+      SECLAB_DATABASE_URL: "sqlite:////data/seclab.db"
+      SECLAB_API_KEY_PEPPER: "${SECLAB_API_KEY_PEPPER:?set a pepper in .env before starting}"
+      SECLAB_CORS_ALLOW_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - seclab-data:/data
+    networks:
+      - lab-net
+
+  web:
+    build:
+      context: apps/web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SECLAB_API_URL: "http://localhost:8000/api/v1"
+    depends_on:
+      - gateway
+    networks:
+      - lab-net
+
+  # Real-time CertStream listener. Opt-in (needs live internet access to
+  # wss://certstream.calidog.io/): `docker compose --profile monitor up`.
+  monitor:
+    build:
+      context: .
+      dockerfile: apps/cli/Dockerfile
+    command: ["monitor", "run"]
+    environment:
+      SECLAB_DATABASE_URL: "sqlite:////data/seclab.db"
+      SECLAB_API_KEY_PEPPER: "${SECLAB_API_KEY_PEPPER:?set a pepper in .env before starting}"
+    volumes:
+      - seclab-data:/data
+    networks:
+      - lab-net
+    profiles:
+      - monitor
+
+  # Deliberately on its OWN network, not `lab-net`: a honeypot is
+  # internet-facing by design and must never be able to reach the gateway,
+  # the database volume, or any other internal service. It only talks
+  # outbound (GeoIP lookup, optional Discord webhook).
+  sensor-chimera:
+    build:
+      context: .
+      dockerfile: packages/modules/sensor_chimera/Dockerfile
+    ports:
+      - "8080:8000"
+    environment:
+      SECLAB_ENV: dev
+      SECLAB_API_KEY_PEPPER: "${SECLAB_API_KEY_PEPPER:?set a pepper in .env before starting}"
+      SECLAB_DISCORD_WEBHOOK_URL: "${SECLAB_DISCORD_WEBHOOK_URL:-}"
+      SECLAB_CHIMERA_ALLOWED_HOSTS: '["*"]'
+    networks:
+      - sensor-net
+    profiles:
+      - sensor
+
+networks:
+  lab-net: {}
+  sensor-net: {}
+
+volumes:
+  seclab-data: {}

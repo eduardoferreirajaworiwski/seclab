@@ -1,0 +1,31 @@
+{
+  "login": [
+    {
+      "issuer_name": "Let's Encrypt",
+      "days_ago": 2,
+      "matching_identities": [
+        "{domain}"
+      ]
+    }
+  ],
+  "secure": [
+    {
+      "issuer_name": "Google Trust Services",
+      "days_ago": 5,
+      "matching_identities": [
+        "{domain}",
+        "www.{domain}"
+      ]
+    }
+  ],
+  "verify": [
+    {
+      "issuer_name": "Sectigo",
+      "days_ago": 1,
+      "matching_identities": [
+        "{domain}"
+      ]
+    }
+  ],
+  "fallback": []
+}
