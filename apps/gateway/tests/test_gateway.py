@@ -3,7 +3,7 @@ from seclab.core.config import Settings
 from seclab.core.db import SessionLocal
 from seclab.security.keys import hash_api_key
 from seclab.security.models import Role, User
-from seclab_gateway.main import app
+from seclab_gateway.main import app, settings
 
 
 def _create_user(*, username: str, role: str = Role.ANALYST.value) -> str:
@@ -77,6 +77,18 @@ def test_recon_requires_authentication_via_gateway():
             json={"name": "Acme", "description": "", "scope_policy": {}},
         )
         assert response.status_code == 401
+
+
+def test_rate_limit_returns_429_once_exceeded():
+    # A distinct client (host, port) isolates this test's counter bucket
+    # from every other test in this file that also calls /api/v1/health
+    # against the same module-level `limiter` (its in-memory storage is a
+    # process-wide singleton, shared by every TestClient instance).
+    limit = int(settings.rate_limit_default.split("/")[0])
+    with TestClient(app, client=("203.0.113.77", 12345)) as client:
+        statuses = [client.get("/api/v1/health").status_code for _ in range(limit + 1)]
+    assert statuses[:-1] == [200] * limit
+    assert statuses[-1] == 429
 
 
 def test_unknown_route_returns_404_not_a_500():

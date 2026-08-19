@@ -11,6 +11,7 @@ from seclab.core.db import init_db
 from seclab.core.logging import configure_logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
 from seclab_gateway.registry import load_manifests, mount_routers, register_models
@@ -41,6 +42,11 @@ app = FastAPI(
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_limit_default])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# SlowAPIMiddleware is what actually applies default_limits to every route -
+# without it, Limiter(default_limits=...) is inert and only routes carrying
+# an explicit @limiter.limit(...) decorator would ever be throttled (none
+# of this gateway's routes do).
+app.add_middleware(SlowAPIMiddleware)
 
 # No allow_origins=["*"] on an authenticated API - driven by config instead
 # (fixes the CORS posture both original scopepilot and chimera shipped with).
