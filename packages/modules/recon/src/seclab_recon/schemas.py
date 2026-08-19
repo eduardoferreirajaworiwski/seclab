@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from seclab.security.models import Role
 from seclab.security.scope_guard import ProgramPolicy
 
 
@@ -44,7 +45,7 @@ class HypothesisCreate(BaseModel):
     description: str = Field(min_length=3)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     suggested_next_step: str = ""
-    required_role: str = Field(default="analyst")
+    required_role: Role = Field(default=Role.ANALYST)
     severity: str = Field(default="medium")
 
 

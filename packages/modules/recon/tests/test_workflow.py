@@ -1,5 +1,6 @@
 import pytest
 from fastapi import HTTPException
+from pydantic import ValidationError
 from seclab.security.scope_guard import ProgramPolicy
 from seclab_recon.schemas import (
     ExecutionComplete,
@@ -39,6 +40,18 @@ def test_target_outside_allowlist_is_marked_out_of_scope(db_session, audit):
         program, TargetCreate(identifier="not-example.com", target_type="domain"), actor="analyst"
     )
     assert target.in_scope is False
+
+
+def test_hypothesis_create_rejects_unknown_required_role():
+    # Previously a free-text field: a hypothesis creator could set
+    # required_role to any string, which role_rank() ranked as 0 - below
+    # every real role - trivially satisfying the approver-rank check in
+    # ApprovalWorkflowService.decide and letting the requester pick who's
+    # allowed to approve their own hypothesis.
+    with pytest.raises(ValidationError):
+        HypothesisCreate(
+            title="finding hypothesis", description="description text", required_role="root"
+        )
 
 
 def test_hypothesis_cannot_be_created_against_out_of_scope_target(db_session, audit):

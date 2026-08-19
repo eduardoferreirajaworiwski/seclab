@@ -118,7 +118,7 @@ class HypothesisService:
             description=payload.description,
             confidence=payload.confidence,
             suggested_next_step=payload.suggested_next_step,
-            required_role=payload.required_role,
+            required_role=payload.required_role.value,
             severity=payload.severity,
             created_by=actor,
             status=HypothesisStatus.DRAFT.value,

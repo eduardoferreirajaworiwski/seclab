@@ -16,7 +16,16 @@ _ROLE_RANK = {Role.ANALYST.value: 1, Role.SECURITY_LEAD.value: 2}
 
 
 def role_rank(role: str) -> int:
-    return _ROLE_RANK.get(role, 0)
+    """Fails closed: an unrecognized role is a bug or tampering, not a
+    'lowest privilege' default. Returning 0 for an unknown value used to let
+    a hypothesis creator set required_role to any string and have every
+    approver's role_rank() >= role_rank(that string) trivially pass -
+    see seclab_recon.schemas.HypothesisCreate.required_role, now a Role enum
+    so unrecognized values are rejected before they ever reach here."""
+    try:
+        return _ROLE_RANK[role]
+    except KeyError as exc:
+        raise ValueError(f"unknown role: {role!r}") from exc
 
 
 class User(Base):
