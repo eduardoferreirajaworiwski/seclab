@@ -1,0 +1,11 @@
+# This Dockerfile does `COPY . .` for the build stage (context is apps/web,
+# see docker-compose.yml) - anything not excluded here ends up inside the
+# image. .env.local in particular would otherwise ship real secrets.
+node_modules
+.next
+.env.local
+.env
+.git
+coverage
+*.tsbuildinfo
+npm-debug.log*

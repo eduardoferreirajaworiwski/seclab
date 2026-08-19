@@ -104,13 +104,16 @@ async def catch_all(request: Request, full_path: str) -> Response:
         logger.info("serving_decoy", extra={"ip": client_ip, "decoy": "aws_credentials"})
         return Response(content=_json(aws_credentials_decoy()), media_type="application/json")
 
-    if any(marker in path_lower for marker in ("env", "config", "secret", "settings")):
-        logger.info("serving_decoy", extra={"ip": client_ip, "decoy": "dotenv"})
-        return Response(content=dotenv_decoy(), media_type="text/plain")
-
+    # Must run before the "config" marker below: ".git/config" contains
+    # "config" too, so the broader check would always win and this decoy
+    # was unreachable.
     if ".git/config" in path_lower:
         logger.info("serving_decoy", extra={"ip": client_ip, "decoy": "git_config"})
         return Response(content=git_config_decoy(), media_type="text/plain")
+
+    if any(marker in path_lower for marker in ("env", "config", "secret", "settings")):
+        logger.info("serving_decoy", extra={"ip": client_ip, "decoy": "dotenv"})
+        return Response(content=dotenv_decoy(), media_type="text/plain")
 
     return Response(content='{"status": "success", "data": null}', media_type="application/json")
 

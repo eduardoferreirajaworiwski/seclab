@@ -137,6 +137,23 @@ def test_full_workflow_approval_to_finding(db_session, audit, make_user):
     findings = FindingService(db_session).list_for_program(program.id)
     assert len(findings) == 1
 
+    # complete() used to have no state guard: calling it again on the same
+    # (already-completed) execution created a second Finding and re-ran the
+    # EXECUTED transition instead of rejecting the request.
+    with pytest.raises(HTTPException) as exc:
+        execution_service.complete(
+            execution,
+            ExecutionComplete(
+                output_summary="confirmed reflected xss (duplicate)",
+                finding_title="Reflected XSS on /search (duplicate)",
+                finding_description="description text",
+                finding_severity="high",
+            ),
+            actor=approver.username,
+        )
+    assert exc.value.status_code == 409
+    assert len(FindingService(db_session).list_for_program(program.id)) == 1
+
 
 def test_self_approval_still_blocked_through_recon_service(db_session, audit, make_user):
     requester = make_user(username="analyst2")

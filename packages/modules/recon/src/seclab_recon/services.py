@@ -256,6 +256,12 @@ class ExecutionService:
         return execution
 
     def complete(self, execution: Execution, payload: ExecutionComplete, *, actor: str) -> Finding:
+        if execution.status == ExecutionStatus.COMPLETED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Execution has already been completed.",
+            )
+
         hypothesis = _get_or_404(self.db, Hypothesis, execution.hypothesis_id, "hypothesis")
 
         execution.status = ExecutionStatus.COMPLETED.value

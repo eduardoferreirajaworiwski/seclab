@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import OrderedDict
 
 from seclab.core.http import HttpProvider
 
@@ -9,6 +10,7 @@ logger = logging.getLogger("seclab.sensor_chimera")
 
 _CACHE_TTL_SECONDS = 300
 _MAX_FIELD_LEN = 80
+_MAX_CACHE_ENTRIES = 2048
 
 
 class GeoIpLookup:
@@ -18,16 +20,23 @@ class GeoIpLookup:
     HTTPS-native provider (ipapi.co) through the shared egress-checked HTTP
     client, caches per-IP for a few minutes, and clamps every field it
     reads before the value is ever embedded in a log line or Discord embed.
+
+    The cache is bounded (LRU, _MAX_CACHE_ENTRIES) rather than a plain dict:
+    this runs inside sensor_chimera, a honeypot deliberately exposed on the
+    open internet, so an unbounded per-source-IP cache is itself a resource
+    an attacker or scanner sending requests from many distinct IPs could
+    grow without limit.
     """
 
     def __init__(self, http: HttpProvider, base_url: str = "https://ipapi.co/{ip}/json/") -> None:
         self._http = http
         self._base_url = base_url
-        self._cache: dict[str, tuple[float, dict]] = {}
+        self._cache: OrderedDict[str, tuple[float, dict]] = OrderedDict()
 
     async def lookup(self, ip: str) -> dict:
         cached = self._cache.get(ip)
         if cached and (time.monotonic() - cached[0]) < _CACHE_TTL_SECONDS:
+            self._cache.move_to_end(ip)
             return cached[1]
 
         try:
@@ -46,6 +55,9 @@ class GeoIpLookup:
             "isp": _clamp(raw.get("org")),
         }
         self._cache[ip] = (time.monotonic(), result)
+        self._cache.move_to_end(ip)
+        if len(self._cache) > _MAX_CACHE_ENTRIES:
+            self._cache.popitem(last=False)
         return result
 
 

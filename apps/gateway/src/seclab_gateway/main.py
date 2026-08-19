@@ -37,6 +37,13 @@ app = FastAPI(
     description="Unified API for the seclab personal security laboratory.",
     version="0.1.0",
     lifespan=lifespan,
+    # /docs and /openapi.json expose the full route/schema surface without
+    # needing an API key (auth only gates the routes themselves, not the
+    # schema describing them) - disabled here to match the posture
+    # sensor_chimera's app already ships with.
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_limit_default])

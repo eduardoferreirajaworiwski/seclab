@@ -95,3 +95,12 @@ def test_unknown_route_returns_404_not_a_500():
     with TestClient(app) as client:
         response = client.get("/api/v1/does-not-exist")
         assert response.status_code == 404
+
+
+def test_docs_and_openapi_schema_are_disabled():
+    # /docs and /openapi.json expose the full route/schema surface without
+    # needing an API key - auth (C1) only gates the routes themselves.
+    with TestClient(app) as client:
+        assert client.get("/docs").status_code == 404
+        assert client.get("/redoc").status_code == 404
+        assert client.get("/openapi.json").status_code == 404

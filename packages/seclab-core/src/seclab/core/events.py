@@ -10,6 +10,8 @@ from seclab.core.http import HttpProvider
 
 logger = logging.getLogger("seclab.events")
 
+_MARKDOWN_SPECIAL_CHARS = ("*", "_", "~", "|", "@")
+
 
 @dataclass
 class Event:
@@ -40,6 +42,27 @@ class LogSink:
         )
 
 
+def _escape_markdown(text: str) -> str:
+    """Neutralizes Discord's inline markdown syntax (bold/italic/strike/
+    spoiler/mention) so attacker-controlled text - e.g. a honeypot hit's
+    User-Agent or request path, see sensor_chimera.app - can't inject
+    formatting or a fake mention-styled ping into an alert an operator
+    reads as a trusted, system-generated message."""
+    for char in _MARKDOWN_SPECIAL_CHARS:
+        text = text.replace(char, f"\\{char}")
+    return text
+
+
+def _sanitize_code_span_value(value: object) -> str:
+    """Field values below are wrapped in a single-backtick code span. A raw
+    backtick in the value closes that span early and lets the remainder of
+    the value render as live, unescaped markdown - backslash-escaping
+    doesn't apply inside code spans (per CommonMark, code spans are
+    delimited by literal backtick runs, not by escape sequences), so a
+    backtick has to be substituted instead."""
+    return str(value).replace("`", "'")
+
+
 class DiscordSink:
     """Generalized version of project-chimera's send_discord_alert, with the
     missing error handling added so a webhook outage can never crash a caller
@@ -52,19 +75,23 @@ class DiscordSink:
     async def emit(self, event: Event) -> None:
         color = {"critical": 15548997, "warning": 16705372}.get(event.severity, 3901635)
         fields = [
-            {"name": key, "value": f"`{value}`", "inline": True}
+            {"name": key, "value": f"`{_sanitize_code_span_value(value)}`", "inline": True}
             for key, value in list(event.payload.items())[:10]
         ]
         payload = {
+            # Belt-and-suspenders alongside the escaping below: even if a
+            # literal "@everyone"/"@here"/"<@id>" slips through somewhere,
+            # Discord will not resolve it into an actual ping.
+            "allowed_mentions": {"parse": []},
             "embeds": [
                 {
                     "title": f"[{event.severity.upper()}] {event.source}/{event.kind}",
-                    "description": event.summary,
+                    "description": _escape_markdown(event.summary),
                     "color": color,
                     "fields": fields,
                     "footer": {"text": event.occurred_at},
                 }
-            ]
+            ],
         }
         try:
             await self._http.post_json(self._webhook_url, payload)

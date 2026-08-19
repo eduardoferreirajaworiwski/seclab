@@ -46,6 +46,19 @@ def test_serves_aws_decoy_for_sensitive_path(client, monkeypatch):
     assert spy.events[0].payload["suspicious"] is True
 
 
+def test_serves_git_config_decoy_not_dotenv_decoy(client, monkeypatch):
+    # ".git/config" contains "config", which also matches the broader
+    # env/config/secret/settings check - that check used to run first and
+    # made this decoy unreachable.
+    spy = SpySink()
+    monkeypatch.setattr(chimera_app, "event_bus", EventBus([spy]))
+
+    response = client.get("/.git/config")
+    assert response.status_code == 200
+    assert "remote \"origin\"" in response.text
+    assert "DB_HOST" not in response.text
+
+
 def test_serves_dotenv_decoy(client, monkeypatch):
     spy = SpySink()
     monkeypatch.setattr(chimera_app, "event_bus", EventBus([spy]))

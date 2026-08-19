@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 
 from seclab.core.config import Settings
 from seclab.core.events import Event, EventBus
+from seclab.core.http import EgressBlockedError, EgressPolicy
 from seclab.security.evidence import EvidenceStore
 from seclab_phantom.models import DomainVariation
 from seclab_phantom.providers import CompositeEnrichmentProvider
@@ -40,6 +41,7 @@ class MatchPipeline:
         self.capture = capture
         self.event_bus = event_bus
         self.evidence = EvidenceStore(db)
+        self.egress = EgressPolicy(settings.http_egress_allowlist)
         self.enrichment_provider = CompositeEnrichmentProvider(
             settings, offline_mode=settings.offline_mode
         )
@@ -100,13 +102,32 @@ class MatchPipeline:
         return match
 
     async def _capture_and_store(self, match: MonitorMatch, domain: str) -> None:
+        # CaptureWorker.capture() navigates a real headless browser to
+        # `domain` - unlike CompositeEnrichmentProvider.enrich() above, it
+        # never went through EgressPolicy, so a certificate issued for a
+        # name that resolves to internal infrastructure would have the
+        # monitor fetch and persist that content as evidence. Same check,
+        # same URL shape capture() itself builds.
+        capture_url = domain if domain.startswith(("http://", "https://")) else f"http://{domain}"
+        try:
+            self.egress.check(capture_url)
+        except EgressBlockedError as exc:
+            logger.warning(
+                "capture_blocked_by_egress_policy", extra={"domain": domain, "error": str(exc)}
+            )
+            match.capture_status = "skipped"
+            return
+
         result: CaptureResult = await self.capture.capture(domain)
         match.capture_status = result.status
         if result.status != "captured":
             return
 
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-        safe_name = domain.replace("*", "wildcard").replace("/", "_")
+        # Readability only ("*.example.com" -> "wildcard.example.com"
+        # instead of an underscore) - write_artifact does the actual
+        # traversal-safe sanitization right before touching the filesystem.
+        safe_name = domain.replace("*", "wildcard")
 
         if result.screenshot_bytes:
             path = write_artifact(
