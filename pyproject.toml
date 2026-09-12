@@ -12,6 +12,7 @@ members = [
   "packages/modules/monitor",
   "packages/modules/sensor_chimera",
   "packages/modules/threatlens",
+  "packages/modules/cve_watch",
   "apps/gateway",
   "apps/cli",
 ]
@@ -39,6 +40,7 @@ pythonpath = [
   "packages/modules/monitor/src",
   "packages/modules/sensor_chimera/src",
   "packages/modules/threatlens/src",
+  "packages/modules/cve_watch/src",
   "apps/gateway/src",
   "apps/cli/src",
 ]
