@@ -30,6 +30,7 @@ def test_health_lists_every_mounted_module():
             "threatlens",
             "cve_watch",
             "osint_breach",
+            "attack_surface",
         }
 
 

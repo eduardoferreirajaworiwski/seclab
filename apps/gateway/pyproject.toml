@@ -12,6 +12,7 @@ dependencies = [
   "seclab-threatlens",
   "seclab-cve-watch",
   "seclab-osint-breach",
+  "seclab-attack-surface",
   "fastapi>=0.115.0,<1.0.0",
   "uvicorn[standard]>=0.30.0,<1.0.0",
   "slowapi>=0.1.9,<1.0.0",
@@ -31,6 +32,7 @@ seclab-monitor = { workspace = true }
 seclab-threatlens = { workspace = true }
 seclab-cve-watch = { workspace = true }
 seclab-osint-breach = { workspace = true }
+seclab-attack-surface = { workspace = true }
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

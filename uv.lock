@@ -682,6 +682,7 @@ name = "seclab-cli"
 version = "0.1.0"
 source = { editable = "apps/cli" }
 dependencies = [
+    { name = "seclab-attack-surface" },
     { name = "seclab-core" },
     { name = "seclab-cve-watch" },
     { name = "seclab-monitor" },
@@ -702,6 +703,7 @@ dev = [
 requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0,<9.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0,<1.0.0" },
+    { name = "seclab-attack-surface", editable = "packages/modules/attack_surface" },
     { name = "seclab-core", editable = "packages/seclab-core" },
     { name = "seclab-cve-watch", editable = "packages/modules/cve_watch" },
     { name = "seclab-monitor", editable = "packages/modules/monitor" },
@@ -785,6 +787,7 @@ version = "0.1.0"
 source = { editable = "apps/gateway" }
 dependencies = [
     { name = "fastapi" },
+    { name = "seclab-attack-surface" },
     { name = "seclab-core" },
     { name = "seclab-cve-watch" },
     { name = "seclab-monitor" },
@@ -807,6 +810,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115.0,<1.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0,<9.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0,<1.0.0" },
+    { name = "seclab-attack-surface", editable = "packages/modules/attack_surface" },
     { name = "seclab-core", editable = "packages/seclab-core" },
     { name = "seclab-cve-watch", editable = "packages/modules/cve_watch" },
     { name = "seclab-monitor", editable = "packages/modules/monitor" },

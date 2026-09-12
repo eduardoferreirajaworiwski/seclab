@@ -49,6 +49,13 @@ try:
 except ImportError:
     pass
 
+try:
+    from seclab_attack_surface.cli import app as attack_surface_app
+
+    app.add_typer(attack_surface_app, name="attack_surface")
+except ImportError:
+    pass
+
 
 if __name__ == "__main__":
     app()
