@@ -6,20 +6,19 @@ from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
+from seclab.core.origin import DataOrigin as DataOrigin
 from seclab.reporting.scoring import RiskSignal
 
-__all__ = ["RiskSignal"]  # re-exported for convenience: seclab_phantom.models.RiskSignal
+# DataOrigin used to be defined here; it now lives in seclab.core.origin and
+# is re-exported (not redefined) for backward compatibility, so every
+# existing `from seclab_phantom.models import DataOrigin` import keeps
+# working unchanged (see packages/seclab-core/tests/test_origin.py).
+__all__ = ["DataOrigin", "RiskSignal"]  # re-exported for convenience
 
 
 class TargetType(StrEnum):
     BRAND = "brand"
     DOMAIN = "domain"
-
-
-class DataOrigin(StrEnum):
-    LIVE = "live"
-    MOCK = "mock"
-    FALLBACK = "fallback"
 
 
 class TargetRequest(BaseModel):
