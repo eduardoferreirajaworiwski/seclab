@@ -19,7 +19,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-seclab-core = { path = "../../seclab-core", editable = true }
+seclab-core = { workspace = true }
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

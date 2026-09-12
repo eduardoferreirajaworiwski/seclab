@@ -19,6 +19,9 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Hermes agent workspace
+.hermes/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
