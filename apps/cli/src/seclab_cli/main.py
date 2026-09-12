@@ -1,9 +1,11 @@
 import typer
 
+from seclab_cli.retention import app as retention_app
 from seclab_cli.users import app as users_app
 
 app = typer.Typer(help="seclab - personal security laboratory CLI.")
 app.add_typer(users_app, name="users")
+app.add_typer(retention_app, name="retention")
 
 try:
     from seclab_phantom.cli import app as phantom_app
