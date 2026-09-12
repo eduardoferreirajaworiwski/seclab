@@ -96,6 +96,7 @@ seclab/
 | `cve_watch` | `/api/v1/cve_watch` | no | no | NVD + CISA KEV exploit tracker, deterministic product/vendor watchlist tagging |
 | `osint_breach` | `/api/v1/osint_breach` | no | no | Breach/leak watcher for tracked emails/domains (HIBP, offline-fixture-first) |
 | `attack_surface` | `/api/v1/attack_surface` | no | yes | Lightweight external ASM: CT-based subdomain discovery + bounded TCP-connect port probing, gated by scope-guard |
+| `fusion` | `/api/v1/fusion` | no | no | Read-only cross-module correlation feed (monitor + threatlens + cve_watch), no own persistence |
 | `sensor_chimera` | *(standalone, not mounted)* | no | no | Active-deception honeypot, isolated network, no DB credentials |
 
 (This table is hand-maintained today; each row's "Approval gate?"/
@@ -258,10 +259,10 @@ for everything cross-cutting:
 
 - **OSINT**: `recon_dns`, `osint_username`, `ip_asn_intel`, `metadata_exif`
   (`osint_breach` shipped — see the Modules table above)
-- **Fusion / correlation view**: a read-only aggregator over `monitor` +
-  `threatlens` + `cve_watch` (+ others) surfacing cross-module signal, e.g.
-  a domain `monitor` flagged this week that also touches a product
-  `cve_watch` says has an actively-exploited CVE right now.
+- **Fusion / correlation view**: shipped as the `fusion` module (option 1
+  from its original design note: thin read-only aggregator, no own
+  persistence) — revisit that choice if the lab grows past ~4 feeder
+  modules per the module's own README.
 - **AppSec, Cloud/DevSecOps, Blue Team, and Threat Modeling** modules
 - **Docs**: the Modules table above is hand-maintained; a `seclab docs
   modules` CLI command that renders it from every registered
