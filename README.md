@@ -46,12 +46,17 @@ seclab/
                             the-loop (from scopepilot)
       monitor/              real-time Certificate Transparency stream
                             monitor (absorbed from hydra-mapper)
+      threatlens/            weekly security-news digest with
+                            deterministic attack-vector tagging
+      cve_watch/             NVD + CISA KEV exploit tracker
+      osint_breach/          breach/leak watcher (HIBP)
+      attack_surface/        lightweight external ASM (scope-guarded)
       sensor_chimera/       active-deception honeypot — separately
                             deployable, never mounted on the gateway
                             (from project-chimera)
   apps/
-    gateway/               FastAPI gateway mounting phantom + recon +
-                           monitor under /api/v1/<module>
+    gateway/               FastAPI gateway mounting every module above
+                           (except sensor_chimera) under /api/v1/<module>
     cli/                   `seclab` command (Typer), offline-first
     web/                   Next.js dashboard (forked from scopepilot's
                             frontend, repointed at the gateway)
@@ -66,17 +71,16 @@ seclab/
     └─────────────┘        │  mounts one router per module │
                             └──────────┬─────────────────────┘
                                        │ ModuleManifest
-              ┌─────────────┬─────────┼─────────┬──────────────┐
-              ▼             ▼         ▼         ▼              ▼
-          phantom        recon     monitor  threatlens   (future...)
-              │             │         │         │
-              └─────────────┴─────────┴─────────┴── seclab-core ──┐
-                                                                   │
-                          config · hardened HTTP client (egress-  │
-                          checked) · db · events · scheduler ·    │
-                          auth/RBAC · scope guard · approval ·    │
-                          audit log · evidence store · reporting  │
-                                                                   ┘
+        ┌───────────┬─────────┬───────┼──────────┬──────────────┬───────────────┐
+        ▼           ▼         ▼       ▼          ▼              ▼               ▼
+    phantom       recon    monitor threatlens cve_watch   osint_breach   attack_surface
+        │           │         │       │          │              │               │
+        └───────────┴─────────┴───────┴──────────┴──────────────┴── seclab-core ┘
+                                                                     │
+                          config · hardened HTTP client (egress-    │
+                          checked) · db · events · scheduler ·      │
+                          auth/RBAC · scope guard · approval ·      │
+                          audit log · evidence store · reporting    │
 
     sensor_chimera runs standalone, on its own Docker network -
     never mounted on the gateway, never given DB credentials.
@@ -88,6 +92,10 @@ seclab/
 | `phantom` | `/api/v1/phantom` | no | no | Lookalike/typosquat domain detection via CT logs + infra enrichment |
 | `recon` | `/api/v1/recon` | yes | yes | Authorized bug-bounty workflow: program → target → hypothesis → approval → execution → finding |
 | `monitor` | `/api/v1/monitor` | no | no | Real-time CT-stream monitoring, scored through the phantom pipeline |
+| `threatlens` | `/api/v1/threatlens` | no | no | Weekly security-news ingestion, deterministic attack-vector tagging, Gemini-assisted digest narrative |
+| `cve_watch` | `/api/v1/cve_watch` | no | no | NVD + CISA KEV exploit tracker, deterministic product/vendor watchlist tagging |
+| `osint_breach` | `/api/v1/osint_breach` | no | no | Breach/leak watcher for tracked emails/domains (HIBP, offline-fixture-first) |
+| `attack_surface` | `/api/v1/attack_surface` | no | yes | Lightweight external ASM: CT-based subdomain discovery + bounded TCP-connect port probing, gated by scope-guard |
 | `sensor_chimera` | *(standalone, not mounted)* | no | no | Active-deception honeypot, isolated network, no DB credentials |
 
 (This table is hand-maintained today; each row's "Approval gate?"/
@@ -145,7 +153,9 @@ Every package ships its own `tests/`. Run them all from the repo root:
 ```bash
 pytest packages/seclab-core/tests packages/modules/phantom/tests \
        packages/modules/recon/tests packages/modules/sensor_chimera/tests \
-       packages/modules/monitor/tests apps/gateway/tests apps/cli/tests \
+       packages/modules/monitor/tests packages/modules/threatlens/tests \
+       packages/modules/cve_watch/tests packages/modules/osint_breach/tests \
+       packages/modules/attack_surface/tests apps/gateway/tests apps/cli/tests \
        --import-mode=importlib
 ```
 
@@ -246,8 +256,12 @@ Planned modules follow the same contract as the existing ones — a
 `models.py`/`routes.py`/`service.py`/`cli.py`, and reuse of `seclab-core`
 for everything cross-cutting:
 
-- **OSINT**: `recon_dns`, `osint_breach`, `osint_username`, `ip_asn_intel`,
-  `metadata_exif`
+- **OSINT**: `recon_dns`, `osint_username`, `ip_asn_intel`, `metadata_exif`
+  (`osint_breach` shipped — see the Modules table above)
+- **Fusion / correlation view**: a read-only aggregator over `monitor` +
+  `threatlens` + `cve_watch` (+ others) surfacing cross-module signal, e.g.
+  a domain `monitor` flagged this week that also touches a product
+  `cve_watch` says has an actively-exploited CVE right now.
 - **AppSec, Cloud/DevSecOps, Blue Team, and Threat Modeling** modules
 - **Docs**: the Modules table above is hand-maintained; a `seclab docs
   modules` CLI command that renders it from every registered
