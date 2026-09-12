@@ -1,0 +1,47 @@
+{
+  "title": "CISA Catalog of Known Exploited Vulnerabilities",
+  "catalogVersion": "2026.09.12",
+  "dateReleased": "2026-09-12T00:00:00.0000Z",
+  "count": 3,
+  "vulnerabilities": [
+    {
+      "cveID": "CVE-2026-10001",
+      "vendorProject": "Acme",
+      "product": "VPN Gateway",
+      "vulnerabilityName": "Acme VPN Gateway Remote Code Execution Vulnerability",
+      "dateAdded": "2026-09-06",
+      "shortDescription": "Acme VPN Gateway contains an unauthenticated remote code execution vulnerability that has been exploited in the wild to deploy ransomware.",
+      "requiredAction": "Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.",
+      "dueDate": "2026-09-27",
+      "knownRansomwareCampaignUse": "Known",
+      "notes": "",
+      "cwes": ["CWE-78"]
+    },
+    {
+      "cveID": "CVE-2026-9988",
+      "vendorProject": "Contoso",
+      "product": "Mail Server",
+      "vulnerabilityName": "Contoso Mail Server Authentication Bypass Vulnerability",
+      "dateAdded": "2026-09-04",
+      "shortDescription": "Contoso Mail Server contains an authentication bypass vulnerability allowing remote attackers to access mailboxes without credentials.",
+      "requiredAction": "Apply updates per vendor instructions.",
+      "dueDate": "2026-09-25",
+      "knownRansomwareCampaignUse": "Unknown",
+      "notes": "",
+      "cwes": ["CWE-287"]
+    },
+    {
+      "cveID": "CVE-2026-9950",
+      "vendorProject": "Initech",
+      "product": "Directory Server",
+      "vulnerabilityName": "Initech Directory Server Privilege Escalation Vulnerability",
+      "dateAdded": "2026-09-08",
+      "shortDescription": "Initech Directory Server contains a privilege escalation vulnerability that has been exploited in the wild.",
+      "requiredAction": "Apply updates per vendor instructions.",
+      "dueDate": "2026-09-29",
+      "knownRansomwareCampaignUse": "Unknown",
+      "notes": "",
+      "cwes": ["CWE-269"]
+    }
+  ]
+}
