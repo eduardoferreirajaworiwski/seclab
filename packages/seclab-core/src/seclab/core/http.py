@@ -155,6 +155,37 @@ class HttpProvider:
 
         raise httpx.TooManyRedirects(f"exceeded {MAX_REDIRECTS} redirects for {url}")
 
+    async def get_text(self, url: str, params: dict[str, str] | None = None) -> str:
+        last_error: Exception | None = None
+        for attempt in range(self._retries + 1):
+            try:
+                return await self._get_text_following_redirects(url, params)
+            except (httpx.HTTPError, ValueError) as exc:
+                last_error = exc
+                await asyncio.sleep(0.2 * (attempt + 1))
+        if last_error:
+            raise last_error
+        return ""
+
+    async def _get_text_following_redirects(
+        self, url: str, params: dict[str, str] | None
+    ) -> str:
+        current_url = url
+        current_params = params
+        for _ in range(MAX_REDIRECTS + 1):
+            response = await self._send_validated("GET", current_url, params=current_params)
+            if response.is_redirect:
+                location = response.headers.get("location")
+                if not location:
+                    response.raise_for_status()
+                    return ""
+                current_url = urljoin(current_url, location)
+                current_params = None
+                continue
+            response.raise_for_status()
+            return response.text
+        raise httpx.TooManyRedirects(f"exceeded {MAX_REDIRECTS} redirects for {url}")
+
     async def post_json(
         self,
         url: str,

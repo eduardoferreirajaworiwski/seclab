@@ -59,6 +59,35 @@ async def test_get_json_blocks_before_any_request_reaches_a_private_destination(
 
 
 @pytest.mark.asyncio
+async def test_get_text_connects_to_the_validated_ip_and_returns_body(monkeypatch):
+    _mock_getaddrinfo(monkeypatch, "93.184.216.34")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<rss><channel></channel></rss>")
+
+    provider = HttpProvider(_settings(), transport=httpx.MockTransport(handler))
+    result = await provider.get_text("https://example.com/feed.xml")
+
+    assert result == "<rss><channel></channel></rss>"
+
+
+@pytest.mark.asyncio
+async def test_get_text_blocks_before_any_request_reaches_a_private_destination(monkeypatch):
+    _mock_getaddrinfo(monkeypatch, "10.0.0.5")
+    called = False
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return httpx.Response(200, text="")
+
+    provider = HttpProvider(_settings(), transport=httpx.MockTransport(handler))
+    with pytest.raises(EgressBlockedError):
+        await provider.get_text("https://internal.example.com/feed.xml")
+    assert called is False
+
+
+@pytest.mark.asyncio
 async def test_post_json_also_connects_to_the_validated_ip(monkeypatch):
     _mock_getaddrinfo(monkeypatch, "93.184.216.34")
     captured: dict[str, object] = {}
