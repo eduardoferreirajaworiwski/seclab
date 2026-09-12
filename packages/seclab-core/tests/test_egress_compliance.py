@@ -10,7 +10,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ALLOWED_HTTPX_FILE = REPO_ROOT / "packages/seclab-core/src/seclab/core/http.py"
-FORBIDDEN_IMPORTS = re.compile(r"^\s*(import (httpx|requests|urllib3)\b|from (httpx|requests|urllib3) )")
+FORBIDDEN_IMPORTS = re.compile(
+    r"^\s*(import (httpx|requests|urllib3)\b|from (httpx|requests|urllib3) )"
+)
 
 SEARCH_DIRS = ["packages", "apps"]
 

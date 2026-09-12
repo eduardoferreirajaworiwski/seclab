@@ -21,7 +21,11 @@ def purge(
             from datetime import UTC, datetime, timedelta
 
             cutoff = datetime.now(UTC) - timedelta(days=days)
-            count = session.query(EvidenceArtifact).filter(EvidenceArtifact.created_at < cutoff).count()
+            count = (
+                session.query(EvidenceArtifact)
+                .filter(EvidenceArtifact.created_at < cutoff)
+                .count()
+            )
             typer.echo(f"[dry-run] would delete {count} evidence_artifacts older than {days}d")
             return
         deleted = purge_older_than(session, EvidenceArtifact, days=days)
