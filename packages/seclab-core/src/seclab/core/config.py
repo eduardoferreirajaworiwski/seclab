@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_model: str = "gemini-2.0-flash"
 
+    hibp_api_key: SecretStr | None = Field(default=None)
+    hibp_base_url: str = "https://haveibeenpwned.com/api/v3"
 
     discord_webhook_url: SecretStr | None = Field(default=None)
 

@@ -115,11 +115,16 @@ class HttpProvider:
         self._egress = egress_policy or EgressPolicy(settings.http_egress_allowlist)
         self._transport = transport
 
-    async def get_json(self, url: str, params: dict[str, str] | None = None) -> list | dict:
+    async def get_json(
+        self,
+        url: str,
+        params: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> list | dict:
         last_error: Exception | None = None
         for attempt in range(self._retries + 1):
             try:
-                return await self._get_json_following_redirects(url, params)
+                return await self._get_json_following_redirects(url, params, headers)
             except (httpx.HTTPError, ValueError) as exc:
                 last_error = exc
                 await asyncio.sleep(0.2 * (attempt + 1))
@@ -128,7 +133,7 @@ class HttpProvider:
         return {}
 
     async def _get_json_following_redirects(
-        self, url: str, params: dict[str, str] | None
+        self, url: str, params: dict[str, str] | None, headers: dict[str, str] | None = None
     ) -> list | dict:
         # Redirects are followed manually, one hop at a time, instead of via
         # httpx's follow_redirects=True: each hop's URL is re-validated
@@ -139,7 +144,9 @@ class HttpProvider:
         current_url = url
         current_params = params
         for _ in range(MAX_REDIRECTS + 1):
-            response = await self._send_validated("GET", current_url, params=current_params)
+            response = await self._send_validated(
+                "GET", current_url, params=current_params, headers=headers
+            )
 
             if response.is_redirect:
                 location = response.headers.get("location")
@@ -227,7 +234,9 @@ class HttpProvider:
         original_host = urlsplit(url).hostname
         pinned_url = _pin_host(url, ip)
 
-        request_headers = dict(headers or self._headers)
+        request_headers = dict(self._headers)
+        if headers:
+            request_headers.update(headers)
         request_headers["Host"] = original_host
 
         async with httpx.AsyncClient(
