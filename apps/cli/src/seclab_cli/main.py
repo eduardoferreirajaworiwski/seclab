@@ -42,6 +42,13 @@ try:
 except ImportError:
     pass
 
+try:
+    from seclab_osint_breach.cli import app as osint_breach_app
+
+    app.add_typer(osint_breach_app, name="osint_breach")
+except ImportError:
+    pass
+
 
 if __name__ == "__main__":
     app()
