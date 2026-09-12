@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from seclab.reporting.scoring import RiskSignal
+
 from seclab_threatlens.models import AttackVector, ThreatArticle
 
 # Deterministic keyword taxonomy: same "named, explainable signal"
