@@ -4,6 +4,7 @@ requires-python = ">=3.11"
 
 [manifest]
 members = [
+    "seclab-attack-surface",
     "seclab-cli",
     "seclab-core",
     "seclab-cve-watch",
@@ -641,6 +642,40 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/39/11/480a6973a927aa653e1cead6a6416008640e03a99d05b34c0434b8c6c366/ruff-0.16.7-py3-none-win_amd64.whl", hash = "sha256:7ac26aca826e9e21d0f1cb25b54ac660760a9fdd094d3e4df9848232be98cfc6", size = 10593368, upload-time = "2026-09-10T18:04:01.999Z" },
     { url = "https://files.pythonhosted.org/packages/8b/4b/51327018d056f0dad2c2238f26d1fb0f53707a9d91b75dea6d1b3039f136/ruff-0.16.7-py3-none-win_arm64.whl", hash = "sha256:aab7f39e2c9df6c596216070f98eef1207b94f8516cca20c808826974971855b", size = 10412401, upload-time = "2026-09-10T18:04:04.098Z" },
 ]
+
+[[package]]
+name = "seclab-attack-surface"
+version = "0.1.0"
+source = { editable = "packages/modules/attack_surface" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "pydantic" },
+    { name = "seclab-core" },
+    { name = "seclab-phantom" },
+    { name = "sqlalchemy" },
+    { name = "typer" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115.0,<1.0.0" },
+    { name = "pydantic", specifier = ">=2.8.0,<3.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0,<9.0.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24.0,<1.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0,<1.0.0" },
+    { name = "seclab-core", editable = "packages/seclab-core" },
+    { name = "seclab-phantom", editable = "packages/modules/phantom" },
+    { name = "sqlalchemy", specifier = ">=2.0.30,<3.0.0" },
+    { name = "typer", specifier = ">=0.12.0,<1.0.0" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "seclab-cli"
