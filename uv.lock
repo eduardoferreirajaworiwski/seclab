@@ -649,6 +649,7 @@ dependencies = [
     { name = "seclab-monitor" },
     { name = "seclab-phantom" },
     { name = "seclab-recon" },
+    { name = "seclab-threatlens" },
     { name = "typer" },
 ]
 
@@ -666,6 +667,7 @@ requires-dist = [
     { name = "seclab-monitor", editable = "packages/modules/monitor" },
     { name = "seclab-phantom", editable = "packages/modules/phantom" },
     { name = "seclab-recon", editable = "packages/modules/recon" },
+    { name = "seclab-threatlens", editable = "packages/modules/threatlens" },
     { name = "typer", specifier = ">=0.12.0,<1.0.0" },
 ]
 provides-extras = ["dev"]
@@ -712,6 +714,7 @@ dependencies = [
     { name = "seclab-monitor" },
     { name = "seclab-phantom" },
     { name = "seclab-recon" },
+    { name = "seclab-threatlens" },
     { name = "slowapi" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -731,6 +734,7 @@ requires-dist = [
     { name = "seclab-monitor", editable = "packages/modules/monitor" },
     { name = "seclab-phantom", editable = "packages/modules/phantom" },
     { name = "seclab-recon", editable = "packages/modules/recon" },
+    { name = "seclab-threatlens", editable = "packages/modules/threatlens" },
     { name = "slowapi", specifier = ">=0.1.9,<1.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0,<1.0.0" },
 ]

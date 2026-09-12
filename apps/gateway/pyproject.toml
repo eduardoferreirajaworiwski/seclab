@@ -9,6 +9,7 @@ dependencies = [
   "seclab-phantom",
   "seclab-recon",
   "seclab-monitor",
+  "seclab-threatlens",
   "fastapi>=0.115.0,<1.0.0",
   "uvicorn[standard]>=0.30.0,<1.0.0",
   "slowapi>=0.1.9,<1.0.0",
@@ -25,6 +26,7 @@ seclab-core = { workspace = true }
 seclab-phantom = { workspace = true }
 seclab-recon = { workspace = true }
 seclab-monitor = { workspace = true }
+seclab-threatlens = { workspace = true }
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

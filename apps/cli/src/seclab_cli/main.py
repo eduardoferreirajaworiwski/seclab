@@ -28,6 +28,13 @@ try:
 except ImportError:
     pass
 
+try:
+    from seclab_threatlens.cli import app as threatlens_app
+
+    app.add_typer(threatlens_app, name="threatlens")
+except ImportError:
+    pass
+
 
 if __name__ == "__main__":
     app()

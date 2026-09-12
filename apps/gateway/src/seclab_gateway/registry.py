@@ -12,6 +12,7 @@ MODULE_MANIFEST_PATHS = [
     "seclab_phantom.manifest",
     "seclab_recon.manifest",
     "seclab_monitor.manifest",
+    "seclab_threatlens.manifest",
 ]
 
 
