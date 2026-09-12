@@ -15,6 +15,7 @@ members = [
   "packages/modules/cve_watch",
   "packages/modules/osint_breach",
   "packages/modules/attack_surface",
+  "packages/modules/fusion",
   "apps/gateway",
   "apps/cli",
 ]
@@ -45,6 +46,7 @@ pythonpath = [
   "packages/modules/cve_watch/src",
   "packages/modules/osint_breach/src",
   "packages/modules/attack_surface/src",
+  "packages/modules/fusion/src",
   "apps/gateway/src",
   "apps/cli/src",
 ]
