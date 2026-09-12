@@ -13,6 +13,7 @@ MODULE_MANIFEST_PATHS = [
     "seclab_recon.manifest",
     "seclab_monitor.manifest",
     "seclab_threatlens.manifest",
+    "seclab_cve_watch.manifest",
 ]
 
 

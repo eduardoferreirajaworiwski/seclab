@@ -23,7 +23,7 @@ def test_health_lists_every_mounted_module():
         assert response.status_code == 200
         payload = response.json()
         assert payload["status"] == "ok"
-        assert set(payload["modules"]) == {"phantom", "recon", "monitor", "threatlens"}
+        assert set(payload["modules"]) == {"phantom", "recon", "monitor", "threatlens", "cve_watch"}
 
 
 def test_health_does_not_require_authentication():

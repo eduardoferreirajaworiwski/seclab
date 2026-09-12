@@ -35,6 +35,13 @@ try:
 except ImportError:
     pass
 
+try:
+    from seclab_cve_watch.cli import app as cve_watch_app
+
+    app.add_typer(cve_watch_app, name="cve_watch")
+except ImportError:
+    pass
+
 
 if __name__ == "__main__":
     app()
