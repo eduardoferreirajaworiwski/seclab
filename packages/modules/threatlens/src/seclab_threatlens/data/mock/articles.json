@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Ransomware group exploits unpatched VPN zero-day",
+    "link": "https://example-security-news.test/vpn-zero-day-ransomware",
+    "published_at": "2026-09-08T12:00:00Z",
+    "source": "Mock Feed",
+    "summary": "A ransomware crew used an unpatched remote code execution flaw in an enterprise VPN appliance to gain initial access, then deployed ransomware across the network."
+  },
+  {
+    "title": "Phishing campaign impersonates finance software vendor",
+    "link": "https://example-security-news.test/phishing-finance-vendor",
+    "published_at": "2026-09-09T09:15:00Z",
+    "source": "Mock Feed",
+    "summary": "Attackers sent business email compromise style phishing messages harvesting credentials from finance teams."
+  },
+  {
+    "title": "Malicious npm package found stealing environment secrets",
+    "link": "https://example-security-news.test/npm-supply-chain",
+    "published_at": "2026-09-10T16:45:00Z",
+    "source": "Mock Feed",
+    "summary": "A popular npm package was compromised in a software supply chain attack, exfiltrating CI environment secrets via a post-install script."
+  },
+  {
+    "title": "Large-scale credential stuffing hits retail login portals",
+    "link": "https://example-security-news.test/credential-stuffing-retail",
+    "published_at": "2026-09-11T07:30:00Z",
+    "source": "Mock Feed",
+    "summary": "Automated credential stuffing and password spraying attempts targeted retail login portals using leaked credential lists."
+  }
+]
