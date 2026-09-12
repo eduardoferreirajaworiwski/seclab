@@ -58,6 +58,43 @@ seclab/
   docker-compose.yml
 ```
 
+## Architecture
+
+    ┌─────────────┐        ┌──────────────────────────────┐
+    │  apps/web   │  HTTP  │        apps/gateway           │
+    │  (Next.js)  │ ─────► │  FastAPI + auth + rate limit  │
+    └─────────────┘        │  mounts one router per module │
+                            └──────────┬─────────────────────┘
+                                       │ ModuleManifest
+              ┌─────────────┬─────────┼─────────┬──────────────┐
+              ▼             ▼         ▼         ▼              ▼
+          phantom        recon     monitor  threatlens   (future...)
+              │             │         │         │
+              └─────────────┴─────────┴─────────┴── seclab-core ──┐
+                                                                   │
+                          config · hardened HTTP client (egress-  │
+                          checked) · db · events · scheduler ·    │
+                          auth/RBAC · scope guard · approval ·    │
+                          audit log · evidence store · reporting  │
+                                                                   ┘
+
+    sensor_chimera runs standalone, on its own Docker network -
+    never mounted on the gateway, never given DB credentials.
+
+## Modules
+
+| Module | Mounted at | Approval gate? | Scope-checked? | Summary |
+|---|---|---|---|---|
+| `phantom` | `/api/v1/phantom` | no | no | Lookalike/typosquat domain detection via CT logs + infra enrichment |
+| `recon` | `/api/v1/recon` | yes | yes | Authorized bug-bounty workflow: program → target → hypothesis → approval → execution → finding |
+| `monitor` | `/api/v1/monitor` | no | no | Real-time CT-stream monitoring, scored through the phantom pipeline |
+| `sensor_chimera` | *(standalone, not mounted)* | no | no | Active-deception honeypot, isolated network, no DB credentials |
+
+(This table is hand-maintained today; each row's "Approval gate?"/
+"Scope-checked?" columns mirror that module's `ModuleManifest.needs_approval`
+/`needs_scope_guard` flags — keep it in sync when adding a module, or see
+the "Roadmap" idea below to generate it instead.)
+
 ## Quickstart (local, no Docker)
 
 ```bash
@@ -212,3 +249,7 @@ for everything cross-cutting:
 - **OSINT**: `recon_dns`, `osint_breach`, `osint_username`, `ip_asn_intel`,
   `metadata_exif`
 - **AppSec, Cloud/DevSecOps, Blue Team, and Threat Modeling** modules
+- **Docs**: the Modules table above is hand-maintained; a `seclab docs
+  modules` CLI command that renders it from every registered
+  `ModuleManifest` (name, mount path, `needs_approval`, `needs_scope_guard`,
+  `description`) would remove the risk of it drifting from the code.
