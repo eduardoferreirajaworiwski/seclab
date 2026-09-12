@@ -1,36 +1,18 @@
 # seclab-monitor
 
-Real-time Certificate Transparency stream monitor, absorbing the standalone
-`hydra-mapper` prototype (2 commits, abandoned) into the `seclab` monorepo
-as the "scheduled monitoring" module `phantom`'s own roadmap wanted.
+Real-time Certificate Transparency stream monitor, absorbed from the
+standalone `hydra-mapper` project. Listens to a CertStream websocket feed
+for newly issued certificates matching configured brand keywords
+(`SECLAB_MONITOR_KEYWORDS`), and for each match runs the exact same
+enrichment + scoring pipeline `phantom` uses for an on-demand analysis
+(`MatchPipeline` reuses `seclab_phantom`'s `CompositeEnrichmentProvider`
+and `score_asset` directly - one scoring rule-set, not two).
 
-Watches the public CertStream feed for newly issued certificates whose
-domain contains a configured brand keyword, runs each match through
-`seclab_phantom`'s enrichment + scoring pipeline (the same one used for
-on-demand lookalike analysis), and persists scored matches plus optional
-forensic capture (screenshot + HTML) to the shared evidence store.
+Optionally captures a screenshot + HTML dump of the matched domain
+(`capture.py`, headless browser) before storing it as evidence
+(`seclab.security.evidence`) - gated by the same `EgressPolicy` every
+other outbound request goes through, so a certificate for a
+privately-routed hostname is never fetched.
 
-## What changed vs. the original hydra-mapper
-
-- **Keywords are configurable** (`SECLAB_MONITOR_KEYWORDS`), not hardcoded.
-- **Matches are scored**, not just printed - they flow through
-  `seclab_phantom.scoring.score_asset` for an explainable, comparable score
-  instead of being a raw keyword hit.
-- **Capture is pooled, not spawned-per-domain**: one Chromium instance is
-  launched once and reused across captures instead of a fresh
-  `sync_playwright()` context per match, which would not scale to
-  CertStream's real volume.
-- **Capture is an optional wrapper**: if Playwright isn't installed, the
-  module still ingests and scores matches - it just skips the
-  screenshot/HTML step and says so, rather than crashing.
-- **Evidence goes through `seclab.security.evidence`** (SHA-256
-  chain-of-custody rows in the DB) instead of loose `<file>.hash` sidecars.
-- **Fixed the wildcard-stripping bug**: the original used
-  `domain.lstrip("*.")`, which strips a *character set* (any leading `*` or
-  `.` chars), not the literal `"*."` prefix. This version uses
-  `removeprefix("*.")`.
-- **Unused dependencies dropped**: `tldextract`, `stix2`, `python-dotenv`,
-  `requests` were declared but never imported in the original.
-
-Mounted by the gateway at `/api/v1/monitor` (read-only match history); the
-listener itself runs as a background job via `seclab.core.scheduler`.
+Mounted by the gateway at `/api/v1/monitor` (read-only match list). CLI:
+`seclab monitor run` (long-running listener, Ctrl+C to stop).
