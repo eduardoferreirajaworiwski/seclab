@@ -16,6 +16,7 @@ MODULE_MANIFEST_PATHS = [
     "seclab_cve_watch.manifest",
     "seclab_osint_breach.manifest",
     "seclab_attack_surface.manifest",
+    "seclab_fusion.manifest",
 ]
 
 

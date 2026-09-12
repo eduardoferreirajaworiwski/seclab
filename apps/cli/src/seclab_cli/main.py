@@ -56,6 +56,13 @@ try:
 except ImportError:
     pass
 
+try:
+    from seclab_fusion.cli import app as fusion_app
+
+    app.add_typer(fusion_app, name="fusion")
+except ImportError:
+    pass
+
 
 if __name__ == "__main__":
     app()
