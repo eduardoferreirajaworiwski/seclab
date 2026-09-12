@@ -13,6 +13,7 @@ members = [
   "packages/modules/sensor_chimera",
   "packages/modules/threatlens",
   "packages/modules/cve_watch",
+  "packages/modules/osint_breach",
   "apps/gateway",
   "apps/cli",
 ]
@@ -41,6 +42,7 @@ pythonpath = [
   "packages/modules/sensor_chimera/src",
   "packages/modules/threatlens/src",
   "packages/modules/cve_watch/src",
+  "packages/modules/osint_breach/src",
   "apps/gateway/src",
   "apps/cli/src",
 ]
