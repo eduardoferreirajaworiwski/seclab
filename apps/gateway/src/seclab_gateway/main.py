@@ -9,10 +9,10 @@ from fastapi.responses import JSONResponse
 from seclab.core.config import get_settings
 from seclab.core.db import init_db
 from seclab.core.logging import configure_logging
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from seclab.core.rate_limit import get_limiter
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 
 from seclab_gateway.registry import load_manifests, mount_routers, register_models
 
@@ -46,7 +46,7 @@ app = FastAPI(
     openapi_url=None,
 )
 
-limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_limit_default])
+limiter = get_limiter(default_limits=[settings.rate_limit_default])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # SlowAPIMiddleware is what actually applies default_limits to every route -

@@ -1,12 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from seclab.core.config import Settings, get_settings
 from seclab.core.db import get_db
+from seclab.core.rate_limit import get_limiter
 from sqlalchemy.orm import Session
 
 from seclab_phantom.models import AnalysisListResponse, AnalysisResult, TargetRequest
 from seclab_phantom.service import AnalysisService
 
 router = APIRouter(tags=["phantom"])
+limiter = get_limiter()
+
+# Tighter, dedicated limit for the AI/scraping-triggering analysis route -
+# the gateway's global default_limits bucket is shared with every other
+# route, so this route needs its own budget to keep a caller from cheaply
+# burning outbound API quota/cost.
+PHANTOM_ANALYSIS_RATE_LIMIT = "5/minute"
 
 
 def get_analysis_service(
@@ -16,10 +24,13 @@ def get_analysis_service(
 
 
 @router.post("/analyses", response_model=AnalysisResult)
+@limiter.limit(PHANTOM_ANALYSIS_RATE_LIMIT)
 async def create_analysis(
-    request: TargetRequest, service: AnalysisService = Depends(get_analysis_service)
+    request: Request,
+    payload: TargetRequest,
+    service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResult:
-    return await service.analyze(request)
+    return await service.analyze(payload)
 
 
 @router.get("/analyses", response_model=AnalysisListResponse)

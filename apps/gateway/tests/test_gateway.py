@@ -104,3 +104,27 @@ def test_docs_and_openapi_schema_are_disabled():
         assert client.get("/docs").status_code == 404
         assert client.get("/redoc").status_code == 404
         assert client.get("/openapi.json").status_code == 404
+
+
+def test_phantom_analysis_has_a_dedicated_tighter_rate_limit():
+    # phantom's default_limits bucket is shared with every other route;
+    # this asserts its OWN limit trips before the global 60/minute would,
+    # proving a dedicated slowapi limit is actually attached to this route.
+    api_key = _create_user(username="phantom-rate-tester")
+    tight_limit = 5  # must match PHANTOM_ANALYSIS_RATE_LIMIT in routes.py
+    with TestClient(app, client=("203.0.113.88", 12345)) as client:
+        statuses = [
+            client.post(
+                "/api/v1/phantom/analyses",
+                json={
+                    "target": "acme",
+                    "target_type": "brand",
+                    "offline_mode": True,
+                    "max_variants": 3,
+                },
+                headers={"Authorization": f"Bearer {api_key}"},
+            ).status_code
+            for _ in range(tight_limit + 1)
+        ]
+    assert statuses[:-1] == [200] * tight_limit
+    assert statuses[-1] == 429
