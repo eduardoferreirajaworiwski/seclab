@@ -13,6 +13,10 @@ const pageLabels: Record<string, string> = {
   "/approvals": "Human approval workflow",
   "/monitor": "Certificate Transparency monitor",
   "/threatlens": "Threat-news digest",
+  "/cve_watch": "CVE / CISA-KEV exploit tracker",
+  "/osint_breach": "Breach/leak watcher",
+  "/attack_surface": "External attack-surface mapper",
+  "/fusion": "Cross-module correlation feed",
 };
 
 export function Topbar() {

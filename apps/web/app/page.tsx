@@ -131,6 +131,50 @@ export default function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>CVE Watch</CardTitle>
+            <CardDescription>NVD + CISA KEV exploit tracker with watchlist tagging.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/cve_watch">
+              <Button variant="outline">Open CVE Watch</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>OSINT Breach</CardTitle>
+            <CardDescription>Breach/leak watcher for tracked emails and domains.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/osint_breach">
+              <Button variant="outline">Open OSINT Breach</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Attack Surface</CardTitle>
+            <CardDescription>External ASM: subdomain discovery and port probing, scope-guarded.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/attack_surface">
+              <Button variant="outline">Open Attack Surface</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Fusion</CardTitle>
+            <CardDescription>Cross-module correlation feed: Monitor + ThreatLens + CVE Watch.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/fusion">
+              <Button variant="outline">Open Fusion</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

@@ -223,3 +223,181 @@ export interface CreateDigestPayload {
   max_articles_per_feed?: number;
   offline_mode?: boolean;
 }
+
+// --- cve_watch ---
+
+export interface WatchedProduct {
+  vendor: string;
+  product: string;
+}
+
+export interface TrackedCve {
+  cve_id: string;
+  description: string;
+  cvss_score: number | null;
+  published_at: string;
+  is_actively_exploited: boolean;
+  matched_products: string[];
+  source: string;
+  match_signals: RiskSignal[];
+}
+
+export interface CveDigestSummary {
+  headline: string;
+  executive_summary: string;
+  exploited_highlights: string[];
+  watchlist_matches: string[];
+  recommended_actions: string[];
+  grounding_notes: string[];
+  model_source: string;
+}
+
+export interface CveDigestResult {
+  digest_id: string;
+  created_at: string;
+  lookback_days: number;
+  cves: TrackedCve[];
+  summary: CveDigestSummary;
+  report_markdown: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface CveDigestListItem {
+  digest_id: string;
+  created_at: string;
+  cve_count: number;
+  actively_exploited_count: number;
+  summary_headline: string;
+  offline_mode: boolean;
+}
+
+export interface CveDigestListResponse {
+  digests: CveDigestListItem[];
+}
+
+export interface CreateCveDigestPayload {
+  lookback_days?: number;
+  watched_products?: WatchedProduct[];
+  offline_mode?: boolean;
+}
+
+// --- osint_breach ---
+
+export interface WatchedIdentifier {
+  identifier: string;
+  identifier_type: "email" | "domain";
+}
+
+export interface BreachExposure {
+  identifier: string;
+  breach_name: string;
+  breach_date: string;
+  data_classes: string[];
+  source: string;
+  origin: string;
+}
+
+export interface BreachSummary {
+  headline: string;
+  executive_summary: string;
+  exposure_breakdown: string[];
+  notable_exposures: string[];
+  recommended_actions: string[];
+  grounding_notes: string[];
+  model_source: string;
+}
+
+export interface BreachCheckResult {
+  check_id: string;
+  created_at: string;
+  identifiers_checked: WatchedIdentifier[];
+  exposures: BreachExposure[];
+  summary: BreachSummary;
+  report_markdown: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface BreachCheckListItem {
+  check_id: string;
+  created_at: string;
+  identifier_count: number;
+  exposure_count: number;
+  summary_headline: string;
+  offline_mode: boolean;
+}
+
+export interface BreachCheckListResponse {
+  checks: BreachCheckListItem[];
+}
+
+export interface CreateBreachCheckPayload {
+  identifiers: WatchedIdentifier[];
+  offline_mode?: boolean;
+}
+
+// --- attack_surface ---
+
+export interface AssetTarget {
+  domain: string;
+}
+
+export interface DiscoveredHost {
+  hostname: string;
+  ip_addresses: string[];
+  open_ports: number[];
+  unexpected_exposure_tags: string[];
+}
+
+export interface SurfaceScanResult {
+  scan_id: string;
+  created_at: string;
+  target: AssetTarget;
+  in_scope: boolean;
+  hosts: DiscoveredHost[];
+  report_markdown: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface SurfaceScanListItem {
+  scan_id: string;
+  created_at: string;
+  domain: string;
+  in_scope: boolean;
+  host_count: number;
+  exposure_tag_count: number;
+}
+
+export interface SurfaceScanListResponse {
+  scans: SurfaceScanListItem[];
+}
+
+export interface CreateSurfaceScanPayload {
+  target: AssetTarget;
+  scope_policy: ScopePolicy;
+}
+
+// --- fusion ---
+
+export interface FusionSignal {
+  source_module: string;
+  kind: string;
+  label: string;
+  detail: string;
+  severity: string;
+}
+
+export interface FusionFinding {
+  id: string;
+  title: string;
+  score: number;
+  signals: FusionSignal[];
+  rationale: string;
+}
+
+export interface FusionFeedResponse {
+  generated_at: string;
+  findings: FusionFinding[];
+  monitor_match_count: number;
+  threatlens_digest_id: string | null;
+  cve_watch_digest_id: string | null;
+}

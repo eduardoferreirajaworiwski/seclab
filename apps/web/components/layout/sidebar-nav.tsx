@@ -42,6 +42,30 @@ const items = [
     description: "Weekly threat-news digest",
     glyph: "06",
   },
+  {
+    href: "/cve_watch",
+    label: "CVE Watch",
+    description: "NVD + CISA KEV exploit tracker",
+    glyph: "07",
+  },
+  {
+    href: "/osint_breach",
+    label: "OSINT Breach",
+    description: "Breach/leak watcher",
+    glyph: "08",
+  },
+  {
+    href: "/attack_surface",
+    label: "Attack Surface",
+    description: "External ASM, scope-guarded",
+    glyph: "09",
+  },
+  {
+    href: "/fusion",
+    label: "Fusion",
+    description: "Cross-module correlation feed",
+    glyph: "10",
+  },
 ];
 
 export function SidebarNav({ mobile = false }: { mobile?: boolean }) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ export function ApiKeyControl() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [hasKey, setHasKey] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setHasKey(Boolean(getStoredApiKey()));
@@ -32,6 +34,13 @@ export function ApiKeyControl() {
         setHasKey(Boolean(value.trim()));
         setValue("");
         setOpen(false);
+        // Every query that already ran (and every 401 it hit before a key
+        // was set, or before this new key) is sitting on stale
+        // data/error - without this, the rest of the dashboard stays
+        // broken until the user manually reloads the page. Invalidating
+        // everything forces an immediate refetch with the new
+        // Authorization header.
+        queryClient.invalidateQueries();
       }}
     >
       <Input
@@ -54,6 +63,7 @@ export function ApiKeyControl() {
           setHasKey(false);
           setValue("");
           setOpen(false);
+          queryClient.invalidateQueries();
         }}
       >
         Clear

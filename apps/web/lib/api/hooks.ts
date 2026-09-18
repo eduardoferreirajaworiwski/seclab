@@ -6,22 +6,32 @@ import type {
   AnalysisResult,
   ApprovalDecisionPayload,
   ApprovalRead,
+  BreachCheckListResponse,
+  BreachCheckResult,
   CompleteExecutionPayload,
   CreateAnalysisPayload,
+  CreateBreachCheckPayload,
+  CreateCveDigestPayload,
   CreateDigestPayload,
   CreateHypothesisPayload,
   CreateProgramPayload,
+  CreateSurfaceScanPayload,
   CreateTargetPayload,
+  CveDigestListResponse,
+  CveDigestResult,
   DigestListResponse,
   DigestResult,
   ExecutionRead,
   FindingRead,
+  FusionFeedResponse,
   HealthResponse,
   HypothesisRead,
   MonitorMatch,
   ProgramRead,
   QueueExecutionPayload,
   RequestApprovalPayload,
+  SurfaceScanListResponse,
+  SurfaceScanResult,
   TargetRead,
 } from "@/lib/types/api";
 
@@ -250,5 +260,92 @@ export function useCreateThreatLensDigestMutation() {
     mutationFn: (payload: CreateDigestPayload = {}) =>
       apiClient.post<DigestResult>("/threatlens/digests", payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["threatlens", "digests"] }),
+  });
+}
+
+// --- cve_watch ---
+
+export function useCveWatchDigestsQuery(limit = 10) {
+  return useQuery({
+    queryKey: ["cve_watch", "digests", limit],
+    queryFn: () => apiClient.get<CveDigestListResponse>(`/cve_watch/digests?limit=${limit}`),
+  });
+}
+
+export function useCveWatchDigestQuery(digestId: string | null) {
+  return useQuery({
+    queryKey: ["cve_watch", "digest", digestId],
+    queryFn: () => apiClient.get<CveDigestResult>(`/cve_watch/digests/${digestId}`),
+    enabled: Boolean(digestId),
+  });
+}
+
+export function useCreateCveWatchDigestMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateCveDigestPayload = {}) =>
+      apiClient.post<CveDigestResult>("/cve_watch/digests", payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cve_watch", "digests"] }),
+  });
+}
+
+// --- osint_breach ---
+
+export function useBreachChecksQuery(limit = 10) {
+  return useQuery({
+    queryKey: ["osint_breach", "checks", limit],
+    queryFn: () => apiClient.get<BreachCheckListResponse>(`/osint_breach/checks?limit=${limit}`),
+  });
+}
+
+export function useBreachCheckQuery(checkId: string | null) {
+  return useQuery({
+    queryKey: ["osint_breach", "check", checkId],
+    queryFn: () => apiClient.get<BreachCheckResult>(`/osint_breach/checks/${checkId}`),
+    enabled: Boolean(checkId),
+  });
+}
+
+export function useCreateBreachCheckMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateBreachCheckPayload) =>
+      apiClient.post<BreachCheckResult>("/osint_breach/checks", payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["osint_breach", "checks"] }),
+  });
+}
+
+// --- attack_surface ---
+
+export function useSurfaceScansQuery(limit = 10) {
+  return useQuery({
+    queryKey: ["attack_surface", "scans", limit],
+    queryFn: () => apiClient.get<SurfaceScanListResponse>(`/attack_surface/scans?limit=${limit}`),
+  });
+}
+
+export function useSurfaceScanQuery(scanId: string | null) {
+  return useQuery({
+    queryKey: ["attack_surface", "scan", scanId],
+    queryFn: () => apiClient.get<SurfaceScanResult>(`/attack_surface/scans/${scanId}`),
+    enabled: Boolean(scanId),
+  });
+}
+
+export function useCreateSurfaceScanMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateSurfaceScanPayload) =>
+      apiClient.post<SurfaceScanResult>("/attack_surface/scans", payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attack_surface", "scans"] }),
+  });
+}
+
+// --- fusion ---
+
+export function useFusionFeedQuery(limit = 20) {
+  return useQuery({
+    queryKey: ["fusion", "feed", limit],
+    queryFn: () => apiClient.get<FusionFeedResponse>(`/fusion/feed?limit=${limit}`),
   });
 }
