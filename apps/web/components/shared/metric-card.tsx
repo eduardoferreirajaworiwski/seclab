@@ -25,7 +25,7 @@ export function MetricCard({
     <Card className="metric-surface">
       <CardHeader className="relative z-10 gap-4">
         <p className="eyebrow">{label}</p>
-        <CardTitle className={cn("text-4xl leading-none tracking-[-0.045em] md:text-5xl", toneClass)}>
+        <CardTitle className={cn("text-4xl leading-[1.05] tracking-[-0.03em] md:text-5xl", toneClass)}>
           {value}
         </CardTitle>
       </CardHeader>
