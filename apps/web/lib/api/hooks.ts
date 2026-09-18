@@ -6,11 +6,8 @@ import type {
   AnalysisResult,
   ApprovalDecisionPayload,
   ApprovalRead,
-  BreachCheckListResponse,
-  BreachCheckResult,
   CompleteExecutionPayload,
   CreateAnalysisPayload,
-  CreateBreachCheckPayload,
   CreateCveDigestPayload,
   CreateDigestPayload,
   CreateHypothesisPayload,
@@ -30,7 +27,6 @@ import type {
   ProgramRead,
   QueueExecutionPayload,
   RequestApprovalPayload,
-  SurfaceScanListResponse,
   SurfaceScanResult,
   TargetRead,
 } from "@/lib/types/api";
@@ -289,48 +285,7 @@ export function useCreateCveWatchDigestMutation() {
   });
 }
 
-// --- osint_breach ---
-
-export function useBreachChecksQuery(limit = 10) {
-  return useQuery({
-    queryKey: ["osint_breach", "checks", limit],
-    queryFn: () => apiClient.get<BreachCheckListResponse>(`/osint_breach/checks?limit=${limit}`),
-  });
-}
-
-export function useBreachCheckQuery(checkId: string | null) {
-  return useQuery({
-    queryKey: ["osint_breach", "check", checkId],
-    queryFn: () => apiClient.get<BreachCheckResult>(`/osint_breach/checks/${checkId}`),
-    enabled: Boolean(checkId),
-  });
-}
-
-export function useCreateBreachCheckMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: CreateBreachCheckPayload) =>
-      apiClient.post<BreachCheckResult>("/osint_breach/checks", payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["osint_breach", "checks"] }),
-  });
-}
-
 // --- attack_surface ---
-
-export function useSurfaceScansQuery(limit = 10) {
-  return useQuery({
-    queryKey: ["attack_surface", "scans", limit],
-    queryFn: () => apiClient.get<SurfaceScanListResponse>(`/attack_surface/scans?limit=${limit}`),
-  });
-}
-
-export function useSurfaceScanQuery(scanId: string | null) {
-  return useQuery({
-    queryKey: ["attack_surface", "scan", scanId],
-    queryFn: () => apiClient.get<SurfaceScanResult>(`/attack_surface/scans/${scanId}`),
-    enabled: Boolean(scanId),
-  });
-}
 
 export function useCreateSurfaceScanMutation() {
   const queryClient = useQueryClient();

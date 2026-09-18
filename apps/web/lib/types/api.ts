@@ -281,60 +281,6 @@ export interface CreateCveDigestPayload {
   offline_mode?: boolean;
 }
 
-// --- osint_breach ---
-
-export interface WatchedIdentifier {
-  identifier: string;
-  identifier_type: "email" | "domain";
-}
-
-export interface BreachExposure {
-  identifier: string;
-  breach_name: string;
-  breach_date: string;
-  data_classes: string[];
-  source: string;
-  origin: string;
-}
-
-export interface BreachSummary {
-  headline: string;
-  executive_summary: string;
-  exposure_breakdown: string[];
-  notable_exposures: string[];
-  recommended_actions: string[];
-  grounding_notes: string[];
-  model_source: string;
-}
-
-export interface BreachCheckResult {
-  check_id: string;
-  created_at: string;
-  identifiers_checked: WatchedIdentifier[];
-  exposures: BreachExposure[];
-  summary: BreachSummary;
-  report_markdown: string;
-  metadata: Record<string, unknown>;
-}
-
-export interface BreachCheckListItem {
-  check_id: string;
-  created_at: string;
-  identifier_count: number;
-  exposure_count: number;
-  summary_headline: string;
-  offline_mode: boolean;
-}
-
-export interface BreachCheckListResponse {
-  checks: BreachCheckListItem[];
-}
-
-export interface CreateBreachCheckPayload {
-  identifiers: WatchedIdentifier[];
-  offline_mode?: boolean;
-}
-
 // --- attack_surface ---
 
 export interface AssetTarget {
@@ -356,19 +302,6 @@ export interface SurfaceScanResult {
   hosts: DiscoveredHost[];
   report_markdown: string;
   metadata: Record<string, unknown>;
-}
-
-export interface SurfaceScanListItem {
-  scan_id: string;
-  created_at: string;
-  domain: string;
-  in_scope: boolean;
-  host_count: number;
-  exposure_tag_count: number;
-}
-
-export interface SurfaceScanListResponse {
-  scans: SurfaceScanListItem[];
 }
 
 export interface CreateSurfaceScanPayload {

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   useAnalysesQuery,
+  useCveWatchDigestsQuery,
   useHealthQuery,
   useMonitorMatchesQuery,
   usePendingApprovalsQuery,
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const pendingApprovals = usePendingApprovalsQuery();
   const monitorMatches = useMonitorMatchesQuery(5);
   const threatlensDigests = useThreatLensDigestsQuery(5);
+  const cveWatchDigests = useCveWatchDigestsQuery(5);
 
   const isPending = health.isPending || analyses.isPending || programs.isPending;
   const isError = health.isError || analyses.isError || programs.isError;
@@ -45,6 +47,8 @@ export default function DashboardPage() {
       />
     );
   }
+
+  const intelRuns = (threatlensDigests.data?.digests.length ?? 0) + (cveWatchDigests.data?.digests.length ?? 0);
 
   return (
     <div className="space-y-8">
@@ -79,9 +83,9 @@ export default function DashboardPage() {
           tone="success"
         />
         <MetricCard
-          label="ThreatLens digests"
-          value={String(threatlensDigests.data?.digests.length ?? 0)}
-          description="Most recent weekly threat-news digests."
+          label="Intel digests"
+          value={String(intelRuns)}
+          description="Recent ThreatLens + CVE Watch digests combined."
           tone="accent"
         />
       </div>
@@ -101,7 +105,10 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recon</CardTitle>
-            <CardDescription>Program scope, targets, hypotheses, and human-approved execution.</CardDescription>
+            <CardDescription>
+              Program scope, targets, hypotheses, human-approved execution, and per-target attack
+              surface mapping.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/programs">
@@ -122,45 +129,15 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>ThreatLens</CardTitle>
-            <CardDescription>Weekly security-news digest with attack-vector tagging.</CardDescription>
+            <CardTitle>Intel</CardTitle>
+            <CardDescription>
+              Weekly threat-news digests (ThreatLens) and CVE / CISA-KEV exploit tracking (CVE
+              Watch), in one place.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/threatlens">
-              <Button variant="outline">Open ThreatLens</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>CVE Watch</CardTitle>
-            <CardDescription>NVD + CISA KEV exploit tracker with watchlist tagging.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/cve_watch">
-              <Button variant="outline">Open CVE Watch</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>OSINT Breach</CardTitle>
-            <CardDescription>Breach/leak watcher for tracked emails and domains.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/osint_breach">
-              <Button variant="outline">Open OSINT Breach</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Attack Surface</CardTitle>
-            <CardDescription>External ASM: subdomain discovery and port probing, scope-guarded.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/attack_surface">
-              <Button variant="outline">Open Attack Surface</Button>
+            <Link href="/intel">
+              <Button variant="outline">Open Intel</Button>
             </Link>
           </CardContent>
         </Card>

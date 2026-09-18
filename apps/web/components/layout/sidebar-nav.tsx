@@ -29,7 +29,7 @@ const sections = [
       {
         href: "/programs",
         label: "Recon Programs",
-        description: "Scope, targets, hypotheses",
+        description: "Scope, targets, hypotheses, attack surface",
         glyph: "03",
       },
       {
@@ -44,40 +44,22 @@ const sections = [
         description: "Live CT-stream matches",
         glyph: "05",
       },
-      {
-        href: "/attack_surface",
-        label: "Attack Surface",
-        description: "External ASM, scope-guarded",
-        glyph: "09",
-      },
     ],
   },
   {
     label: "Threat intel",
     items: [
       {
-        href: "/threatlens",
-        label: "ThreatLens",
-        description: "Weekly threat-news digest",
+        href: "/intel",
+        label: "Intel",
+        description: "News and CVE digests",
         glyph: "06",
-      },
-      {
-        href: "/cve_watch",
-        label: "CVE Watch",
-        description: "NVD + CISA KEV exploit tracker",
-        glyph: "07",
-      },
-      {
-        href: "/osint_breach",
-        label: "OSINT Breach",
-        description: "Breach/leak watcher",
-        glyph: "08",
       },
       {
         href: "/fusion",
         label: "Fusion",
         description: "Cross-module correlation feed",
-        glyph: "10",
+        glyph: "07",
       },
     ],
   },
