@@ -12,6 +12,7 @@ const pageLabels: Record<string, string> = {
   "/programs": "Recon program inventory",
   "/approvals": "Human approval workflow",
   "/monitor": "Certificate Transparency monitor",
+  "/threatlens": "Threat-news digest",
 };
 
 export function Topbar() {

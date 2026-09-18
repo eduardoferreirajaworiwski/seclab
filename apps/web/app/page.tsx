@@ -13,6 +13,7 @@ import {
   useMonitorMatchesQuery,
   usePendingApprovalsQuery,
   useProgramsQuery,
+  useThreatLensDigestsQuery,
 } from "@/lib/api/hooks";
 import { getApiErrorMessage } from "@/lib/api/client";
 
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const programs = useProgramsQuery();
   const pendingApprovals = usePendingApprovalsQuery();
   const monitorMatches = useMonitorMatchesQuery(5);
+  const threatlensDigests = useThreatLensDigestsQuery(5);
 
   const isPending = health.isPending || analyses.isPending || programs.isPending;
   const isError = health.isError || analyses.isError || programs.isError;
@@ -51,7 +53,7 @@ export default function DashboardPage() {
         description="One console over every module: lookalike-domain detection, authorized bug-bounty workflow, and real-time Certificate Transparency monitoring."
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           label="Phantom analyses"
           value={String(analyses.data?.analyses.length ?? 0)}
@@ -75,6 +77,12 @@ export default function DashboardPage() {
           value={String(monitorMatches.data?.length ?? 0)}
           description="Most recent Certificate Transparency hits."
           tone="success"
+        />
+        <MetricCard
+          label="ThreatLens digests"
+          value={String(threatlensDigests.data?.digests.length ?? 0)}
+          description="Most recent weekly threat-news digests."
+          tone="accent"
         />
       </div>
 
@@ -109,6 +117,17 @@ export default function DashboardPage() {
           <CardContent>
             <Link href="/monitor">
               <Button variant="outline">Open Monitor</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>ThreatLens</CardTitle>
+            <CardDescription>Weekly security-news digest with attack-vector tagging.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/threatlens">
+              <Button variant="outline">Open ThreatLens</Button>
             </Link>
           </CardContent>
         </Card>

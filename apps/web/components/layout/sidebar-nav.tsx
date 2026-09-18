@@ -36,6 +36,12 @@ const items = [
     description: "Live CT-stream matches",
     glyph: "05",
   },
+  {
+    href: "/threatlens",
+    label: "ThreatLens",
+    description: "Weekly threat-news digest",
+    glyph: "06",
+  },
 ];
 
 export function SidebarNav({ mobile = false }: { mobile?: boolean }) {
