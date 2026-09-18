@@ -206,6 +206,15 @@ routes — it doesn't affect reachability. Get a valid key with
 `seclab users create <name> --role analyst` (printed once to stdout) and
 paste it in via "Set API key".
 
+### `SECLAB_API_KEY_PEPPER is unset or still the default placeholder`
+
+This means `.env` is missing or still has the shipped placeholder value —
+run `seclab init` (see Quickstart above) to generate a real one
+automatically, or set `SECLAB_API_KEY_PEPPER` by hand in `.env` (e.g.
+`python -c "import secrets; print(secrets.token_urlsafe(32))"`). `seclab
+init` is idempotent: re-running it on a checkout that already has a real
+pepper leaves it untouched and only adds the new user you specify.
+
 ### Live-mode lookups fall back to mock data / crt.sh returns 429
 
 crt.sh and rdap.org are free, unauthenticated public services with tight
@@ -226,8 +235,10 @@ reduce the number of concurrent lookups in a single analysis.
   and schema surface isn't browsable without a key either.
 - API keys are hashed with HMAC-SHA256 and a server-side pepper
   (`seclab.security.keys`), not unsalted SHA-256 like the original
-  scopepilot. The gateway and CLI refuse to start if
-  `SECLAB_API_KEY_PEPPER` is missing or left at its placeholder value.
+  scopepilot. The gateway and any CLI command that touches the database
+  refuse to run if `SECLAB_API_KEY_PEPPER` is missing or left at its
+  placeholder value (`seclab init` sets this automatically on first run,
+  see Quickstart above).
 - The gateway's rate limit (`rate_limit_default`, 60/minute by default) is
   enforced on every request via `SlowAPIMiddleware`.
 - All outbound HTTP goes through `seclab.core.http.HttpProvider`, which
