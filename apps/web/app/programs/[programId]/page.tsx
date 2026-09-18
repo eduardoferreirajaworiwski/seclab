@@ -14,6 +14,7 @@ import { getApiErrorMessage } from "@/lib/api/client";
 import {
   useCompleteExecutionMutation,
   useCreateHypothesisMutation,
+  useCreateSurfaceScanMutation,
   useCreateTargetMutation,
   useHypothesisExecutionsQuery,
   useProgramFindingsQuery,
@@ -24,7 +25,7 @@ import {
   useRequestApprovalMutation,
 } from "@/lib/api/hooks";
 import { formatDateTime } from "@/lib/format";
-import type { HypothesisRead, TargetRead } from "@/lib/types/api";
+import type { HypothesisRead, SurfaceScanResult, TargetRead } from "@/lib/types/api";
 
 function NewTargetForm({ programId }: { programId: number }) {
   const [identifier, setIdentifier] = useState("");
@@ -57,6 +58,68 @@ function NewTargetForm({ programId }: { programId: number }) {
       </Button>
       {createTarget.isError ? <p className="text-xs text-rose-200">{getApiErrorMessage(createTarget.error)}</p> : null}
     </form>
+  );
+}
+
+function AttackSurfaceScanPanel({ target, allowedDomains }: { target: TargetRead; allowedDomains: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [result, setResult] = useState<SurfaceScanResult | null>(null);
+  const createScan = useCreateSurfaceScanMutation();
+
+  if (!target.in_scope) {
+    return null;
+  }
+
+  if (!open) {
+    return (
+      <Button type="button" size="sm" variant="secondary" onClick={() => setOpen(true)}>
+        Map attack surface
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 border-t border-[var(--border-subtle)] pt-2">
+      <Button
+        type="button"
+        size="sm"
+        disabled={createScan.isPending}
+        onClick={() =>
+          createScan.mutate(
+            {
+              target: { domain: target.identifier },
+              scope_policy: { allowed_domains: allowedDomains },
+            },
+            { onSuccess: (data) => setResult(data) },
+          )
+        }
+      >
+        {createScan.isPending ? "Scanning..." : `Scan ${target.identifier}`}
+      </Button>
+      {createScan.isError ? <p className="text-xs text-rose-200">{getApiErrorMessage(createScan.error)}</p> : null}
+      {result ? (
+        <div className="space-y-2 text-xs text-[var(--muted-foreground)]">
+          <p>
+            {result.hosts.length} host(s) discovered
+            {result.hosts.some((h) => h.unexpected_exposure_tags.length > 0) ? " - exposure tags found" : ""}
+          </p>
+          {result.hosts.map((host) => (
+            <div key={host.hostname} className="subpanel space-y-1 p-3">
+              <p className="font-semibold text-[var(--foreground)]">{host.hostname}</p>
+              <p>IPs: {host.ip_addresses.join(", ") || "—"}</p>
+              <p>Open ports: {host.open_ports.join(", ") || "none"}</p>
+              {host.unexpected_exposure_tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {host.unexpected_exposure_tags.map((tag) => (
+                    <StatusBadge key={tag} status="high" label={tag} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -260,6 +323,10 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ progra
                 </div>
                 <p className="text-xs text-[var(--muted-foreground)]">{target.scope_reason}</p>
                 <NewHypothesisForm programId={programId} target={target} />
+                <AttackSurfaceScanPanel
+                  target={target}
+                  allowedDomains={program.data.scope_policy.allowed_domains ?? []}
+                />
               </div>
             ))}
           </div>
