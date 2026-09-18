@@ -6,7 +6,6 @@ from typing import Any
 
 import certstream
 from seclab.core.config import Settings, get_settings
-from seclab.core.db import SessionLocal
 from seclab.core.events import EventBus, get_event_bus
 
 from seclab_monitor.capture import CaptureWorker
@@ -75,6 +74,8 @@ class CertStreamMonitor:
                 )
 
     async def _handle_match(self, domain: str, issuer: str, keyword: str) -> None:
+        from seclab.core.db import SessionLocal
+
         session = SessionLocal()
         try:
             pipeline = MatchPipeline(

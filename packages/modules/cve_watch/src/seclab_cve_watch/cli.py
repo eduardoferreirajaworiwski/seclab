@@ -3,8 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import typer
-from seclab.core.config import get_settings
-from seclab.core.db import SessionLocal, init_db
 
 from seclab_cve_watch.models import DigestRequest
 from seclab_cve_watch.service import CveWatchService
@@ -18,6 +16,9 @@ def run(
     lookback_days: int = typer.Option(7, help="Lookback window in days."),
 ) -> None:
     """Fetch the latest NVD + CISA KEV CVEs, tag against the watchlist, and print the report."""
+    from seclab.core.config import get_settings
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab_cve_watch.db  # noqa: F401  (register tables before init_db)
 
     init_db()

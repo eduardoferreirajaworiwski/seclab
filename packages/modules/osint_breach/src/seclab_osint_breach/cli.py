@@ -3,8 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import typer
-from seclab.core.config import get_settings
-from seclab.core.db import SessionLocal, init_db
 
 from seclab_osint_breach.models import BreachCheckRequest, WatchedIdentifier
 from seclab_osint_breach.service import BreachCheckService
@@ -19,6 +17,9 @@ def run(
     offline: bool = typer.Option(True, help="Use the offline fixture set (no network calls)."),
 ) -> None:
     """Check watched email/domain identifiers against breach data and print the report."""
+    from seclab.core.config import get_settings
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab_osint_breach.db  # noqa: F401  (register tables before init_db)
 
     init_db()

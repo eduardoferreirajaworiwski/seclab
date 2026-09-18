@@ -1,5 +1,4 @@
 import typer
-from seclab.core.db import SessionLocal, init_db
 from seclab.security.models import EvidenceArtifact
 
 app = typer.Typer(help="Prune old evidence/audit rows (opt-in, explicit).")
@@ -10,6 +9,8 @@ def purge(
     days: int = typer.Option(90, help="Delete rows older than this many days."),
     dry_run: bool = typer.Option(True, help="Report counts without deleting."),
 ) -> None:
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab.security.models  # noqa: F401
 
     init_db()

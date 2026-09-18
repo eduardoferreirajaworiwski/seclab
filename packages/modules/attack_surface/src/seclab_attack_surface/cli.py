@@ -3,8 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import typer
-from seclab.core.config import get_settings
-from seclab.core.db import SessionLocal, init_db
 from seclab.security.scope_guard import ProgramPolicy
 from seclab_phantom.providers import CrtShProvider
 
@@ -29,6 +27,9 @@ def scan(
     offline: bool = typer.Option(True, help="Use offline CT fixtures (no network calls)."),
 ) -> None:
     """Run a scope-gated attack-surface scan and print the report."""
+    from seclab.core.config import get_settings
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab_attack_surface.db  # noqa: F401  (register tables before init_db)
 
     init_db()

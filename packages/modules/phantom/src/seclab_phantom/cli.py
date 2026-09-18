@@ -3,8 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import typer
-from seclab.core.config import get_settings
-from seclab.core.db import SessionLocal, init_db
 
 from seclab_phantom.models import TargetRequest, TargetType
 from seclab_phantom.service import AnalysisService
@@ -20,6 +18,9 @@ def analyze(
     max_variants: int = typer.Option(10, help="Maximum lookalike domain variants to generate."),
 ) -> None:
     """Run a phantom analysis and print the Markdown report to stdout."""
+    from seclab.core.config import get_settings
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab_phantom.db  # noqa: F401  (register phantom tables before init_db)
 
     init_db()

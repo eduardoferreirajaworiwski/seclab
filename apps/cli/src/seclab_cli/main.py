@@ -1,67 +1,37 @@
+import importlib
+
 import typer
 
+from seclab_cli.init import init_lab
 from seclab_cli.retention import app as retention_app
 from seclab_cli.users import app as users_app
 
 app = typer.Typer(help="seclab - personal security laboratory CLI.")
 app.add_typer(users_app, name="users")
 app.add_typer(retention_app, name="retention")
+app.command("init")(init_lab)
 
-try:
-    from seclab_phantom.cli import app as phantom_app
+# Mirrors apps/gateway/src/seclab_gateway/registry.py's MODULE_MANIFEST_PATHS
+# (kept as a separate list, not imported from the gateway package, because
+# apps/cli must not depend on apps/gateway) - update both lists together
+# when adding a module.
+MODULE_CLI_APPS: list[tuple[str, str]] = [
+    ("seclab_phantom.cli", "phantom"),
+    ("seclab_recon.cli", "recon"),
+    ("seclab_monitor.cli", "monitor"),
+    ("seclab_threatlens.cli", "threatlens"),
+    ("seclab_cve_watch.cli", "cve_watch"),
+    ("seclab_osint_breach.cli", "osint_breach"),
+    ("seclab_attack_surface.cli", "attack_surface"),
+    ("seclab_fusion.cli", "fusion"),
+]
 
-    app.add_typer(phantom_app, name="phantom")
-except ImportError:
-    pass
-
-try:
-    from seclab_recon.cli import app as recon_app
-
-    app.add_typer(recon_app, name="recon")
-except ImportError:
-    pass
-
-try:
-    from seclab_monitor.cli import app as monitor_app
-
-    app.add_typer(monitor_app, name="monitor")
-except ImportError:
-    pass
-
-try:
-    from seclab_threatlens.cli import app as threatlens_app
-
-    app.add_typer(threatlens_app, name="threatlens")
-except ImportError:
-    pass
-
-try:
-    from seclab_cve_watch.cli import app as cve_watch_app
-
-    app.add_typer(cve_watch_app, name="cve_watch")
-except ImportError:
-    pass
-
-try:
-    from seclab_osint_breach.cli import app as osint_breach_app
-
-    app.add_typer(osint_breach_app, name="osint_breach")
-except ImportError:
-    pass
-
-try:
-    from seclab_attack_surface.cli import app as attack_surface_app
-
-    app.add_typer(attack_surface_app, name="attack_surface")
-except ImportError:
-    pass
-
-try:
-    from seclab_fusion.cli import app as fusion_app
-
-    app.add_typer(fusion_app, name="fusion")
-except ImportError:
-    pass
+for module_path, command_name in MODULE_CLI_APPS:
+    try:
+        module = importlib.import_module(module_path)
+    except ImportError:
+        continue
+    app.add_typer(module.app, name=command_name)
 
 
 if __name__ == "__main__":

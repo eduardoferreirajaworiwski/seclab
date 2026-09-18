@@ -112,10 +112,10 @@ python -m venv .venv
 
 pip install -r requirements-dev.txt   # editable install of every workspace package
 
-# Create your first user - every module's routes require this key now
-# (only /api/v1/health is public). This prints an API key, shown once —
-# paste it into the dashboard's "Set API key" control in the topbar.
-seclab users create alice --role security_lead
+seclab init
+# generates SECLAB_API_KEY_PEPPER, sets up the database, and creates your
+# first user - prints an API key, shown once. Paste it into the dashboard's
+# "Set API key" control in the topbar.
 
 # Terminal 1 — gateway
 uvicorn seclab_gateway.main:app --reload --app-dir apps/gateway/src

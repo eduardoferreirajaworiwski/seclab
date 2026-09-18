@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import typer
-from seclab.core.config import get_settings
-from seclab.core.db import SessionLocal, init_db
 
 from seclab_fusion.service import DEFAULT_FEED_LIMIT, FusionService
 
@@ -14,6 +12,9 @@ def feed(
     limit: int = typer.Option(DEFAULT_FEED_LIMIT, help="Max number of top findings to print."),
 ) -> None:
     """Print the top correlated findings across monitor/threatlens/cve_watch."""
+    from seclab.core.config import get_settings
+    from seclab.core.db import SessionLocal, init_db
+
     import seclab_cve_watch.db  # noqa: F401  (register tables before init_db)
     import seclab_monitor.models  # noqa: F401
     import seclab_threatlens.db  # noqa: F401
