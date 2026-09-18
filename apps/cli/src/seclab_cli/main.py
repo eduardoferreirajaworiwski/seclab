@@ -14,14 +14,14 @@ app.command("init")(init_lab)
 # Mirrors apps/gateway/src/seclab_gateway/registry.py's MODULE_MANIFEST_PATHS
 # (kept as a separate list, not imported from the gateway package, because
 # apps/cli must not depend on apps/gateway) - update both lists together
-# when adding a module.
+# when adding a module. osint_breach was deprecated - see the gateway
+# registry's comment and packages/modules/osint_breach/DEPRECATED.md.
 MODULE_CLI_APPS: list[tuple[str, str]] = [
     ("seclab_phantom.cli", "phantom"),
     ("seclab_recon.cli", "recon"),
     ("seclab_monitor.cli", "monitor"),
     ("seclab_threatlens.cli", "threatlens"),
     ("seclab_cve_watch.cli", "cve_watch"),
-    ("seclab_osint_breach.cli", "osint_breach"),
     ("seclab_attack_surface.cli", "attack_surface"),
     ("seclab_fusion.cli", "fusion"),
 ]

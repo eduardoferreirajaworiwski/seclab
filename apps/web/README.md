@@ -10,13 +10,17 @@ API-key-in-`localStorage` auth flow.
 
 Rewritten for seclab's actual routes: `lib/types/api.ts`, `lib/api/client.ts`,
 `lib/api/hooks.ts`, `lib/api/query-client.ts`, `lib/api/auth.ts`,
-`lib/format.ts`, `lib/utils.ts`, and the page set - covering every mounted
-module: Phantom (submit/browse analyses), Recon (programs → targets →
-hypotheses → approvals → executions → findings), Monitor (CT-stream
-matches), ThreatLens, CVE Watch, OSINT Breach, Attack Surface (all four:
-run/browse a digest-or-check/scan and view its report), and Fusion
-(read-only correlated feed) - instead of scopepilot's original page set
-alone.
+`lib/format.ts`, `lib/utils.ts`, and the page set: Phantom (submit/browse
+analyses), Recon (programs → targets → hypotheses → approvals → executions
+→ findings, plus a per-target "map attack surface" action), Monitor
+(CT-stream matches), Intel (ThreatLens + CVE Watch digests behind one
+tabbed page, since both follow the exact same ingest → tag → AI-summary →
+report shape), and Fusion (read-only correlated feed). OSINT Breach was
+deprecated and unmounted from the gateway (see
+`packages/modules/osint_breach/DEPRECATED.md`), so it has no page here
+either. Attack Surface has no standalone page anymore — it's reachable
+only from a Recon program's target row, since its scope-guard model
+mirrors Recon's exactly.
 
 Run: `npm install && npm run dev` (needs `NEXT_PUBLIC_SECLAB_API_URL`
 pointing at the gateway, see `.env.example`).

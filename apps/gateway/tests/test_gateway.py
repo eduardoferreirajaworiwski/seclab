@@ -29,7 +29,6 @@ def test_health_lists_every_mounted_module():
             "monitor",
             "threatlens",
             "cve_watch",
-            "osint_breach",
             "attack_surface",
             "fusion",
         }
@@ -45,6 +44,13 @@ def test_sensor_chimera_is_never_mounted_on_the_gateway():
     with TestClient(app) as client:
         response = client.get("/api/v1/health")
         assert "sensor_chimera" not in response.json()["modules"]
+
+
+def test_osint_breach_is_deprecated_and_not_mounted():
+    with TestClient(app) as client:
+        response = client.get("/api/v1/health")
+        assert "osint_breach" not in response.json()["modules"]
+        assert client.get("/api/v1/osint_breach/checks").status_code == 404
 
 
 def test_phantom_analysis_requires_authentication():

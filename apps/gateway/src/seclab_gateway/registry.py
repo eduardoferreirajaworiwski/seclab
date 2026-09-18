@@ -8,13 +8,17 @@ from seclab.security.auth import get_current_user
 # personal lab (no risk of an installed-but-untrusted package silently
 # registering itself as a module). sensor_chimera is deliberately excluded
 # - it is a separately deployable honeypot process, never mounted here.
+# osint_breach was deprecated and unmounted (structurally redundant with
+# the threatlens/cve_watch digest shape, narrowest personal-lab utility,
+# and the only module requiring a paid third-party API key for its live
+# path) - its code and tests remain under packages/modules/osint_breach/
+# for at least one release cycle; see its DEPRECATED.md.
 MODULE_MANIFEST_PATHS = [
     "seclab_phantom.manifest",
     "seclab_recon.manifest",
     "seclab_monitor.manifest",
     "seclab_threatlens.manifest",
     "seclab_cve_watch.manifest",
-    "seclab_osint_breach.manifest",
     "seclab_attack_surface.manifest",
     "seclab_fusion.manifest",
 ]

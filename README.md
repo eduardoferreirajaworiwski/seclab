@@ -49,14 +49,19 @@ seclab/
       threatlens/            weekly security-news digest with
                             deterministic attack-vector tagging
       cve_watch/             NVD + CISA KEV exploit tracker
-      osint_breach/          breach/leak watcher (HIBP)
-      attack_surface/        lightweight external ASM (scope-guarded)
+      osint_breach/          breach/leak watcher (HIBP) - DEPRECATED,
+                            unmounted from the gateway/CLI/dashboard, see
+                            packages/modules/osint_breach/DEPRECATED.md
+      attack_surface/        lightweight external ASM (scope-guarded),
+                            exposed in the dashboard as a per-target
+                            action inside Recon, not its own top-level page
       sensor_chimera/       active-deception honeypot — separately
                             deployable, never mounted on the gateway
                             (from project-chimera)
   apps/
     gateway/               FastAPI gateway mounting every module above
-                           (except sensor_chimera) under /api/v1/<module>
+                           (except sensor_chimera and osint_breach) under
+                           /api/v1/<module>
     cli/                   `seclab` command (Typer), offline-first
     web/                   Next.js dashboard (forked from scopepilot's
                             frontend, repointed at the gateway)
@@ -71,10 +76,10 @@ seclab/
     └─────────────┘        │  mounts one router per module │
                             └──────────┬─────────────────────┘
                                        │ ModuleManifest
-        ┌───────────┬─────────┬───────┼──────────┬──────────────┬───────────────┐
-        ▼           ▼         ▼       ▼          ▼              ▼               ▼
-    phantom       recon    monitor threatlens cve_watch   osint_breach   attack_surface
-        │           │         │       │          │              │               │
+        ┌───────────┬─────────┬───────┼──────────┬──────────────┐
+        ▼           ▼         ▼       ▼          ▼              ▼
+    phantom       recon    monitor threatlens cve_watch   attack_surface
+        │           │         │       │          │              │
         └───────────┴─────────┴───────┴──────────┴──────────────┴── seclab-core ┘
                                                                      │
                           config · hardened HTTP client (egress-    │
@@ -84,20 +89,22 @@ seclab/
 
     sensor_chimera runs standalone, on its own Docker network -
     never mounted on the gateway, never given DB credentials.
+    osint_breach is deprecated and not mounted either - see
+    packages/modules/osint_breach/DEPRECATED.md.
 
 ## Modules
 
 | Module | Mounted at | Approval gate? | Scope-checked? | Summary |
 |---|---|---|---|---|
 | `phantom` | `/api/v1/phantom` | no | no | Lookalike/typosquat domain detection via CT logs + infra enrichment |
-| `recon` | `/api/v1/recon` | yes | yes | Authorized bug-bounty workflow: program → target → hypothesis → approval → execution → finding |
+| `recon` | `/api/v1/recon` | yes | yes | Authorized bug-bounty workflow: program → target → hypothesis → approval → execution → finding; the dashboard also exposes `attack_surface` scans here, per target |
 | `monitor` | `/api/v1/monitor` | no | no | Real-time CT-stream monitoring, scored through the phantom pipeline |
-| `threatlens` | `/api/v1/threatlens` | no | no | Weekly security-news ingestion, deterministic attack-vector tagging, Gemini-assisted digest narrative |
-| `cve_watch` | `/api/v1/cve_watch` | no | no | NVD + CISA KEV exploit tracker, deterministic product/vendor watchlist tagging |
-| `osint_breach` | `/api/v1/osint_breach` | no | no | Breach/leak watcher for tracked emails/domains (HIBP, offline-fixture-first) |
-| `attack_surface` | `/api/v1/attack_surface` | no | yes | Lightweight external ASM: CT-based subdomain discovery + bounded TCP-connect port probing, gated by scope-guard |
+| `threatlens` | `/api/v1/threatlens` | no | no | Weekly security-news ingestion, deterministic attack-vector tagging, Gemini-assisted digest narrative; dashboard page: `/intel` |
+| `cve_watch` | `/api/v1/cve_watch` | no | no | NVD + CISA KEV exploit tracker, deterministic product/vendor watchlist tagging; dashboard page: `/intel` |
+| `attack_surface` | `/api/v1/attack_surface` | no | yes | Lightweight external ASM: CT-based subdomain discovery + bounded TCP-connect port probing, gated by scope-guard; exposed in the dashboard as a per-target action inside Recon (`/programs/<id>`), not its own page |
 | `fusion` | `/api/v1/fusion` | no | no | Read-only cross-module correlation feed (monitor + threatlens + cve_watch), no own persistence |
 | `sensor_chimera` | *(standalone, not mounted)* | no | no | Active-deception honeypot, isolated network, no DB credentials |
+| `osint_breach` | *(deprecated, not mounted)* | no | no | Breach/leak watcher for tracked emails/domains (HIBP) - code and tests kept for one release cycle, see `packages/modules/osint_breach/DEPRECATED.md` |
 
 (This table is hand-maintained today; each row's "Approval gate?"/
 "Scope-checked?" columns mirror that module's `ModuleManifest.needs_approval`
@@ -160,7 +167,9 @@ pytest packages/seclab-core/tests packages/modules/phantom/tests \
        --import-mode=importlib
 ```
 
-(`--import-mode=importlib` is set as the default in the workspace
+(`osint_breach`'s own tests still run standalone even though the module is
+deprecated/unmounted — see `packages/modules/osint_breach/DEPRECATED.md`.
+`--import-mode=importlib` is set as the default in the workspace
 `pyproject.toml`, so a plain `pytest` from the root also works.)
 
 ```bash
@@ -269,7 +278,8 @@ Planned modules follow the same contract as the existing ones — a
 for everything cross-cutting:
 
 - **OSINT**: `recon_dns`, `osint_username`, `ip_asn_intel`, `metadata_exif`
-  (`osint_breach` shipped — see the Modules table above)
+  (`osint_breach` shipped, then deprecated/unmounted — see the Modules
+  table above and `packages/modules/osint_breach/DEPRECATED.md`)
 - **Fusion / correlation view**: shipped as the `fusion` module (option 1
   from its original design note: thin read-only aggregator, no own
   persistence) — revisit that choice if the lab grows past ~4 feeder
