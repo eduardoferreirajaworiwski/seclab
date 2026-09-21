@@ -50,6 +50,37 @@
   --shadow-panel: none;
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-button: none;
+
+  /* "Signal" design system additions - explanatory callouts, pipeline
+     steppers, and per-module-track color coding. Additive to the palette
+     above: the teal accent stays the primary brand color, these extend it
+     rather than replacing anything already in use. */
+  --explainer-background: rgba(116, 169, 224, 0.06);
+  --explainer-border: rgba(116, 169, 224, 0.2);
+  --explainer-foreground: #9dc3ec;
+
+  --stepper-complete: var(--success);
+  --stepper-complete-soft: var(--success-soft);
+  --stepper-complete-border: var(--success-border);
+  --stepper-active: var(--accent);
+  --stepper-active-soft: var(--accent-soft);
+  --stepper-active-border: var(--border-accent);
+  --stepper-pending-foreground: var(--subtle-foreground);
+  --stepper-blocked: var(--danger);
+  --stepper-blocked-soft: var(--danger-soft);
+  --stepper-blocked-border: var(--danger-border);
+
+  /* One accent per module track, used consistently in the sidebar,
+     dashboard, and per-page badges - see ModuleTrackBadge. */
+  --track-discovery: #5fd3bd;
+  --track-discovery-soft: rgba(95, 211, 189, 0.12);
+  --track-discovery-border: rgba(95, 211, 189, 0.28);
+  --track-bugbounty: #b48ce0;
+  --track-bugbounty-soft: rgba(180, 140, 224, 0.12);
+  --track-bugbounty-border: rgba(180, 140, 224, 0.28);
+  --track-intel: #74a9e0;
+  --track-intel-soft: rgba(116, 169, 224, 0.12);
+  --track-intel-border: rgba(116, 169, 224, 0.28);
 }
 
 * {
