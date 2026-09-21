@@ -125,3 +125,23 @@ class FindingRead(ORMModel):
     severity: str
     status: str
     created_at: datetime
+
+
+class SuggestedHypothesis(BaseModel):
+    """One AI- or checklist-generated candidate hypothesis. Never persisted
+    directly - the analyst reviews it and, if it's worth pursuing, submits
+    it through the existing HypothesisCreate endpoint like any other
+    hypothesis, keeping the human-in-the-loop approval gate intact."""
+
+    title: str
+    description: str
+    technique: str
+    suggested_next_step: str
+    severity: str
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class HypothesisSuggestions(BaseModel):
+    target_identifier: str
+    model_source: str
+    suggestions: list[SuggestedHypothesis]

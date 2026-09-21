@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from seclab.core.config import get_settings
 from seclab.core.db import get_db
 from seclab.security.audit import AuditLogger
 from seclab.security.auth import get_current_user
@@ -6,6 +7,7 @@ from seclab.security.evidence import EvidenceStore
 from seclab.security.models import User
 from sqlalchemy.orm import Session
 
+from seclab_recon.ai_tactics import TacticsAdvisorService
 from seclab_recon.schemas import (
     ApprovalDecisionRequest,
     ApprovalRead,
@@ -16,6 +18,7 @@ from seclab_recon.schemas import (
     FindingRead,
     HypothesisCreate,
     HypothesisRead,
+    HypothesisSuggestions,
     ProgramCreate,
     ProgramRead,
     TargetCreate,
@@ -82,6 +85,41 @@ def create_target(
 def list_targets(program_id: int, db: Session = Depends(get_db)) -> list[TargetRead]:
     targets = TargetService(db, AuditLogger(db)).list_for_program(program_id)
     return [TargetRead.model_validate(t) for t in targets]
+
+
+@router.post(
+    "/targets/{target_id}/ai-suggest-hypotheses", response_model=HypothesisSuggestions
+)
+async def suggest_hypotheses(
+    target_id: int,
+    db: Session = Depends(get_db),
+    audit: AuditLogger = Depends(get_audit),
+    user: User = Depends(get_current_user),
+) -> HypothesisSuggestions:
+    """Suggests candidate hypotheses for a target (attack techniques worth
+    investigating) using the shared AI provider (Gemini-first, OpenAI
+    fallback), or a deterministic checklist if AI is disabled/unavailable.
+    Read-only: never creates a Hypothesis itself - the analyst reviews each
+    suggestion and submits the ones worth pursuing via the existing
+    create_hypothesis endpoint, so the approval workflow stays untouched."""
+    target = TargetService(db, audit).get(target_id)
+    existing = HypothesisService(db, audit).list_for_program(target.program_id)
+    settings = get_settings()
+    service = TacticsAdvisorService(settings)
+    suggestions = await service.suggest(
+        target, existing=existing, offline_mode=settings.offline_mode
+    )
+    audit.log(
+        event_type="ai_hypotheses_suggested",
+        entity_type="recon.target",
+        entity_id=target.id,
+        actor=user.username,
+        decision="suggested",
+        reason=f"model_source={suggestions.model_source}",
+        metadata={"count": len(suggestions.suggestions)},
+    )
+    db.commit()
+    return suggestions
 
 
 @router.post("/targets/{target_id}/hypotheses", response_model=HypothesisRead)

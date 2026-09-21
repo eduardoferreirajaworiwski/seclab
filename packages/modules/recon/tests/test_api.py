@@ -85,3 +85,29 @@ def test_unauthenticated_request_is_rejected(db_session):
         json={"name": "Acme Bounty", "description": "", "scope_policy": {}},
     )
     assert resp.status_code == 401
+
+
+def test_ai_suggest_hypotheses_returns_deterministic_fallback_when_offline(db_session, make_user):
+    user = make_user(username="analyst-ai")
+    client = build_client(db_session, user)
+
+    program_id = client.post(
+        "/api/v1/recon/programs",
+        json={
+            "name": "AI Bounty",
+            "description": "",
+            "scope_policy": {"allowed_domains": ["example.com"]},
+        },
+    ).json()["id"]
+    target_id = client.post(
+        f"/api/v1/recon/programs/{program_id}/targets",
+        json={"identifier": "example.com", "target_type": "domain"},
+    ).json()["id"]
+
+    resp = client.post(f"/api/v1/recon/targets/{target_id}/ai-suggest-hypotheses")
+    assert resp.status_code == 200
+    body = resp.json()
+    # Settings() defaults offline_mode=True, so no AI call is attempted -
+    # the deterministic checklist fallback is what should come back here.
+    assert body["model_source"] == "deterministic-fallback"
+    assert len(body["suggestions"]) > 0
