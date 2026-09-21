@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Explainer } from "@/components/shared/explainer";
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
@@ -30,6 +32,11 @@ function ApprovalRow({ approval }: { approval: ApprovalRead }) {
         <StatusBadge status={approval.required_role} />
       </div>
       <p className="text-sm text-[var(--foreground)]">{approval.request_rationale}</p>
+      <Explainer title="Quem pode decidir">
+        Requer papel <span className="font-mono">{approval.required_role}</span> ou superior. Quem
+        pediu (<span className="font-mono">{approval.requested_by}</span>) não pode decidir a
+        própria solicitação - o backend recusa mesmo que essa tela permita tentar.
+      </Explainer>
       <form
         className="flex flex-wrap items-center gap-2"
         onSubmit={(event) => {
@@ -73,7 +80,8 @@ export default function ApprovalsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Approval queue"
-        description="Every state-changing action waits here for a human with a sufficient role. Requesters can never approve their own request."
+        description="Every state-changing action waits here for a human with a sufficient role. Requesters can never approve their own request. Etapa 'Aprovação humana' do fluxo Recon: Target → Hipótese → Aprovação → Execução → Finding."
+        action={<ModuleTrackBadge track="bugbounty" />}
       />
 
       <Card>

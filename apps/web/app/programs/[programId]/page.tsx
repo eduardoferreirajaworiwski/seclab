@@ -2,7 +2,9 @@
 
 import { use, useState } from "react";
 
+import { Explainer } from "@/components/shared/explainer";
 import { PageHeader } from "@/components/shared/page-header";
+import { PipelineStepper, type PipelineStep } from "@/components/shared/pipeline-stepper";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
@@ -165,6 +167,26 @@ function NewHypothesisForm({ programId, target }: { programId: number; target: T
   );
 }
 
+function hypothesisPipelineSteps(
+  status: HypothesisRead["status"],
+  hasExecution: boolean,
+): PipelineStep[] {
+  const order = ["draft", "pending_approval", "approved", "executed"];
+  const index = order.indexOf(status === "rejected" ? "pending_approval" : status);
+  const stepState = (stepIndex: number): PipelineStep["state"] => {
+    if (status === "rejected" && stepIndex === 1) return "blocked";
+    if (stepIndex < index) return "complete";
+    if (stepIndex === index) return "active";
+    return "pending";
+  };
+  return [
+    { key: "hypothesis", label: "Hipótese", state: stepState(0) },
+    { key: "approval", label: "Aprovação", state: stepState(1) },
+    { key: "execution", label: "Execução", state: hasExecution ? "complete" : stepState(2) },
+    { key: "finding", label: "Finding", state: stepState(3) },
+  ];
+}
+
 function HypothesisRow({ hypothesis, programId }: { hypothesis: HypothesisRead; programId: number }) {
   const [rationale, setRationale] = useState("");
   const [actionPlan, setActionPlan] = useState("");
@@ -185,46 +207,64 @@ function HypothesisRow({ hypothesis, programId }: { hypothesis: HypothesisRead; 
         <StatusBadge status={hypothesis.status} />
       </div>
 
+      <PipelineStepper
+        steps={hypothesisPipelineSteps(hypothesis.status, latestExecution?.status === "completed")}
+      />
+
       {hypothesis.status === "draft" ? (
-        <form
-          className="flex flex-wrap items-end gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!rationale.trim()) return;
-            requestApproval.mutate({ rationale: rationale.trim() }, { onSuccess: () => setRationale("") });
-          }}
-        >
-          <Input
-            value={rationale}
-            onChange={(event) => setRationale(event.target.value)}
-            placeholder="Rationale for human review"
-            className="w-72"
-          />
-          <Button type="submit" size="sm" variant="secondary" disabled={requestApproval.isPending}>
-            Request approval
-          </Button>
-        </form>
+        <div className="space-y-2">
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!rationale.trim()) return;
+              requestApproval.mutate({ rationale: rationale.trim() }, { onSuccess: () => setRationale("") });
+            }}
+          >
+            <Input
+              value={rationale}
+              onChange={(event) => setRationale(event.target.value)}
+              placeholder="Rationale for human review"
+              className="w-72"
+            />
+            <Button type="submit" size="sm" variant="secondary" disabled={requestApproval.isPending}>
+              Request approval
+            </Button>
+          </form>
+          <Explainer title="Por que isso precisa de aprovação">
+            Nenhuma execução é enfileirada sem uma decisão humana registrada aqui. Quem pediu a
+            hipótese não pode aprová-la, e o aprovador precisa ter papel igual ou acima do exigido
+            (<span className="font-mono">{hypothesis.required_role}</span>).
+          </Explainer>
+        </div>
       ) : null}
 
       {hypothesis.status === "approved" && !latestExecution ? (
-        <form
-          className="flex flex-wrap items-end gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!actionPlan.trim()) return;
-            queueExecution.mutate({ action_plan: actionPlan.trim() }, { onSuccess: () => setActionPlan("") });
-          }}
-        >
-          <Input
-            value={actionPlan}
-            onChange={(event) => setActionPlan(event.target.value)}
-            placeholder="Action plan for the approved execution"
-            className="w-72"
-          />
-          <Button type="submit" size="sm" disabled={queueExecution.isPending}>
-            Queue execution
-          </Button>
-        </form>
+        <div className="space-y-2">
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!actionPlan.trim()) return;
+              queueExecution.mutate({ action_plan: actionPlan.trim() }, { onSuccess: () => setActionPlan("") });
+            }}
+          >
+            <Input
+              value={actionPlan}
+              onChange={(event) => setActionPlan(event.target.value)}
+              placeholder="Action plan for the approved execution"
+              className="w-72"
+            />
+            <Button type="submit" size="sm" disabled={queueExecution.isPending}>
+              Queue execution
+            </Button>
+          </form>
+          <Explainer title="Gate de execução">
+            Enfileirar só é permitido porque existe uma aprovação válida registrada para esta
+            hipótese - o backend recusa (403) qualquer tentativa sem ela, mesmo que a UI seja
+            contornada.
+          </Explainer>
+        </div>
       ) : null}
 
       {latestExecution && latestExecution.status !== "completed" ? (

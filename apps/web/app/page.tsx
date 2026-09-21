@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { MetricCard } from "@/components/shared/metric-card";
 import { PageHeader } from "@/components/shared/page-header";
+import { PipelineStepper } from "@/components/shared/pipeline-stepper";
 import { ErrorState, LoadingState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +19,59 @@ import {
   useThreatLensDigestsQuery,
 } from "@/lib/api/hooks";
 import { getApiErrorMessage } from "@/lib/api/client";
+
+const TRACKS: {
+  track: "discovery" | "bugbounty" | "intel";
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+}[] = [
+  {
+    track: "discovery",
+    title: "Phantom",
+    description: "Lookalike/typosquat domain detection via Certificate Transparency.",
+    href: "/phantom",
+    cta: "Open Phantom",
+  },
+  {
+    track: "discovery",
+    title: "Monitor",
+    description: "Real-time CT-stream matches, scored through the Phantom pipeline.",
+    href: "/monitor",
+    cta: "Open Monitor",
+  },
+  {
+    track: "bugbounty",
+    title: "Recon",
+    description:
+      "Program scope, targets, hypotheses, human-approved execution, and per-target attack surface mapping.",
+    href: "/programs",
+    cta: "Open Programs",
+  },
+  {
+    track: "bugbounty",
+    title: "Approvals",
+    description: "Every hypothesis waits here for a human decision before execution.",
+    href: "/approvals",
+    cta: "Open Approvals",
+  },
+  {
+    track: "intel",
+    title: "Intel",
+    description:
+      "Weekly threat-news digests (ThreatLens) and CVE / CISA-KEV exploit tracking (CVE Watch), in one place.",
+    href: "/intel",
+    cta: "Open Intel",
+  },
+  {
+    track: "intel",
+    title: "Fusion",
+    description: "Cross-module correlation feed: Monitor + ThreatLens + CVE Watch.",
+    href: "/fusion",
+    cta: "Open Fusion",
+  },
+];
 
 export default function DashboardPage() {
   const health = useHealthQuery();
@@ -57,6 +112,27 @@ export default function DashboardPage() {
         description="One console over every module: lookalike-domain detection, authorized bug-bounty workflow, and real-time Certificate Transparency monitoring."
       />
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Comece por aqui: o fluxo de bug bounty</CardTitle>
+          <CardDescription>
+            Todo trabalho de Recon segue essa trilha, de ponta a ponta - cada etapa exige a
+            anterior.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PipelineStepper
+            steps={[
+              { key: "target", label: "Target", state: "complete" },
+              { key: "hypothesis", label: "Hipótese", state: "complete" },
+              { key: "approval", label: "Aprovação humana", state: "active" },
+              { key: "execution", label: "Execução", state: "pending" },
+              { key: "finding", label: "Finding", state: "pending" },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           label="Phantom analyses"
@@ -91,67 +167,22 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Phantom</CardTitle>
-            <CardDescription>Lookalike/typosquat domain detection via Certificate Transparency.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/phantom">
-              <Button variant="outline">Open Phantom</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Recon</CardTitle>
-            <CardDescription>
-              Program scope, targets, hypotheses, human-approved execution, and per-target attack
-              surface mapping.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/programs">
-              <Button variant="outline">Open Programs</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Monitor</CardTitle>
-            <CardDescription>Real-time CT-stream matches, scored through the Phantom pipeline.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/monitor">
-              <Button variant="outline">Open Monitor</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Intel</CardTitle>
-            <CardDescription>
-              Weekly threat-news digests (ThreatLens) and CVE / CISA-KEV exploit tracking (CVE
-              Watch), in one place.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/intel">
-              <Button variant="outline">Open Intel</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Fusion</CardTitle>
-            <CardDescription>Cross-module correlation feed: Monitor + ThreatLens + CVE Watch.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/fusion">
-              <Button variant="outline">Open Fusion</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {TRACKS.map((item) => (
+          <Card key={item.title}>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle>{item.title}</CardTitle>
+                <ModuleTrackBadge track={item.track} />
+              </div>
+              <CardDescription>{item.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={item.href}>
+                <Button variant="outline">{item.cta}</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>

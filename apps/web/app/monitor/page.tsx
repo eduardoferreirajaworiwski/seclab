@@ -1,5 +1,7 @@
 "use client";
 
+import { Explainer } from "@/components/shared/explainer";
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
@@ -17,7 +19,14 @@ export default function MonitorPage() {
       <PageHeader
         title="Monitor"
         description="Real-time Certificate Transparency stream matches, scored through the same Phantom pipeline used for on-demand analyses."
+        action={<ModuleTrackBadge track="discovery" />}
       />
+
+      <Explainer title="O que este módulo faz">
+        É um stream ao vivo de Certificate Transparency, cruzado com o mesmo scoring do
+        Phantom - cada match aqui é um domínio recém-emitido que bateu numa palavra-chave
+        monitorada.
+      </Explainer>
 
       <Card>
         <CardHeader>

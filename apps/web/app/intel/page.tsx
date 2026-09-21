@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Explainer } from "@/components/shared/explainer";
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
@@ -64,7 +66,14 @@ export default function IntelPage() {
       <PageHeader
         title="Intel"
         description="Weekly threat digests: security news (ThreatLens) and CVE / CISA-KEV exploit tracking (CVE Watch), both deterministically tagged with an AI-assisted narrative."
+        action={<ModuleTrackBadge track="intel" />}
       />
+
+      <Explainer title="O que este módulo faz">
+        Contexto do mundo, não um workflow de ação: tagueamento de vetor de ataque é sempre
+        determinístico (regras nomeadas); a narrativa em texto é gerada por IA (Gemini, com
+        fallback para OpenAI) apenas quando configurada - senão cai num resumo determinístico.
+      </Explainer>
 
       <div className="flex gap-2">
         {(Object.keys(SOURCE_LABELS) as IntelSource[]).map((key) => (

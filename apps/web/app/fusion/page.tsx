@@ -1,5 +1,7 @@
 "use client";
 
+import { Explainer } from "@/components/shared/explainer";
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
@@ -16,7 +18,14 @@ export default function FusionPage() {
       <PageHeader
         title="Fusion"
         description="Read-only cross-module correlation feed: findings from Monitor, ThreatLens, and CVE Watch joined into one prioritized, explainable view. No own persistence - always computed fresh."
+        action={<ModuleTrackBadge track="intel" />}
       />
+
+      <Explainer title="O que este módulo faz">
+        Nunca grava nada - é uma junção somente-leitura de sinais que já existem em outros
+        módulos, recalculada a cada carregamento. Útil para ver rapidamente onde Monitor,
+        ThreatLens e CVE Watch apontam pro mesmo risco.
+      </Explainer>
 
       <Card>
         <CardHeader>

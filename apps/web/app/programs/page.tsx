@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function ProgramsPage() {
       <PageHeader
         title="Recon programs"
         description="Every target, hypothesis, and execution lives under a program with an explicit scope policy. No allowlist means nothing is in scope - by design. Fluxo dentro de um programa: Target (checado contra o escopo) → Hipótese → Aprovação humana → Execução → Finding."
+        action={<ModuleTrackBadge track="bugbounty" />}
       />
 
       <Card>

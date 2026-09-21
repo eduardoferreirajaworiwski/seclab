@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Explainer } from "@/components/shared/explainer";
+import { ModuleTrackBadge } from "@/components/shared/module-track-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared/states";
@@ -30,7 +32,13 @@ export default function PhantomPage() {
       <PageHeader
         title="Phantom"
         description="Generate lookalike/typosquat domain variants for a brand or domain, check Certificate Transparency logs, enrich infrastructure, and score risk with explainable rules."
+        action={<ModuleTrackBadge track="discovery" />}
       />
+
+      <Explainer title="O que este módulo faz">
+        Só detecta e pontua - não age sozinho. Cada domínio candidato recebe um score
+        explicável (motivo do score é sempre mostrado); nada aqui vira execução automática.
+      </Explainer>
 
       <Card>
         <CardHeader>
