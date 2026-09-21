@@ -43,6 +43,10 @@ class ApprovalWorkflowService:
         rationale: str,
         expires_at: datetime | None = None,
     ) -> ApprovalRequest:
+        """Opens a new pending approval for (subject_type, subject_id),
+        first expiring any stale pending one for the same subject. Raises
+        409 if a still-pending approval already exists - one subject can
+        only have one open approval decision in flight at a time."""
         self.expire_pending_for_subject(subject_type=subject_type, subject_id=subject_id)
         pending = self.db.scalar(
             select(ApprovalRequest).where(
@@ -107,6 +111,11 @@ class ApprovalWorkflowService:
         status_value: str,
         rationale: str,
     ) -> ApprovalRequest:
+        """Core approve/reject transition: expires the approval if its
+        deadline already passed, blocks self-approval, and blocks an
+        approver whose role ranks below required_role - each blocked case
+        is itself audit-logged before raising, so a rejected/self decision
+        attempt is not silently discarded."""
         if self.expire_if_needed(approval):
             self.db.commit()
             raise HTTPException(
@@ -180,6 +189,12 @@ class ApprovalWorkflowService:
         )
 
     def evaluate_execution_gate(self, *, subject_type: str, subject_id: str) -> ApprovalGateResult:
+        """Checks whether execution may proceed for a subject: looks at
+        only the most recent approval request for it and requires that
+        request to be APPROVED (not pending, rejected, or expired, and not
+        missing entirely). This is the single choke point every module's
+        execution-queueing endpoint must call before doing anything
+        irreversible."""
         latest = self.db.scalar(
             select(ApprovalRequest)
             .where(

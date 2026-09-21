@@ -68,7 +68,8 @@ class TacticsAdvisorService:
                 continue
             try:
                 suggestions.append(SuggestedHypothesis(**item))
-            except Exception:
+            except Exception as exc:
+                logger.debug("ai_suggestion_item_invalid", extra={"error": str(exc)})
                 continue
         if not suggestions:
             return fallback
@@ -89,14 +90,20 @@ _GENERIC_TECHNIQUES_BY_TYPE: dict[str, list[dict[str, str]]] = {
                 "unclaimed cloud resources (S3, Heroku, GitHub Pages, etc.)."
             ),
             "technique": "subdomain_takeover",
-            "suggested_next_step": "Run a subdomain enumeration pass and diff against known live services.",
+            "suggested_next_step": (
+                "Run a subdomain enumeration pass and diff against known live services."
+            ),
             "severity": "high",
         },
         {
             "title": "Review CORS configuration",
-            "description": "Check for reflected Origin headers or wildcard ACAO with credentials allowed.",
+            "description": (
+                "Check for reflected Origin headers or wildcard ACAO with credentials allowed."
+            ),
             "technique": "misconfigured_cors",
-            "suggested_next_step": "Send requests with an attacker-controlled Origin header and inspect ACAO/ACAC.",
+            "suggested_next_step": (
+                "Send requests with an attacker-controlled Origin header and inspect ACAO/ACAC."
+            ),
             "severity": "medium",
         },
         {
@@ -110,9 +117,13 @@ _GENERIC_TECHNIQUES_BY_TYPE: dict[str, list[dict[str, str]]] = {
     "ip": [
         {
             "title": "Fingerprint exposed services",
-            "description": "Identify open ports/services and check for known CVEs on detected versions.",
+            "description": (
+                "Identify open ports/services and check for known CVEs on detected versions."
+            ),
             "technique": "service_fingerprinting",
-            "suggested_next_step": "Run a version-detection scan and cross-check against cve_watch.",
+            "suggested_next_step": (
+                "Run a version-detection scan and cross-check against cve_watch."
+            ),
             "severity": "medium",
         },
     ],

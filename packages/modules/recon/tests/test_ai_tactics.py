@@ -3,7 +3,6 @@ import json
 import pytest
 from seclab.core.ai_provider import AIProviderName, AIResult
 from seclab.core.config import Settings
-
 from seclab_recon.ai_tactics import TacticsAdvisorService
 from seclab_recon.models import Target
 

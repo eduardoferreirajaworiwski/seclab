@@ -123,6 +123,9 @@ class ScopeGuardService:
     def validate_target_in_scope(
         self, policy: ProgramPolicy, *, identifier: str, target_type: str
     ) -> TargetValidationResult:
+        """Checks a single target against the policy's allow/deny lists.
+        Fail-closed: an empty allowlist means nothing is in scope, and a
+        denylist match always wins over an allowlist match."""
         normalized_target = self._normalize_target(identifier=identifier, target_type=target_type)
         if not normalized_target:
             return TargetValidationResult(
@@ -169,6 +172,9 @@ class ScopeGuardService:
     def requires_manual_approval(
         self, policy: ProgramPolicy, *, action: ProposedAction
     ) -> ManualApprovalResult:
+        """Flags an in-scope, non-forbidden action as still needing a human
+        sign-off (sensitive technique, high request rate, state-changing,
+        or authenticated) before it may be executed."""
         reasons: list[str] = []
 
         if self._matches_technique(action, policy.limits.manual_approval_techniques):
@@ -202,6 +208,9 @@ class ScopeGuardService:
     def block_prohibited_action(
         self, policy: ProgramPolicy, *, action: ProposedAction
     ) -> ActionBlockResult:
+        """Hard-blocks an action outright (forbidden technique, or over the
+        program's rate/target-count limits) - unlike manual approval, there
+        is no human override for a blocked action."""
         if self._matches_technique(action, policy.forbidden_techniques):
             return ActionBlockResult(
                 blocked=True,
@@ -241,6 +250,9 @@ class ScopeGuardService:
     def validate_action(
         self, policy: ProgramPolicy, *, action: ProposedAction
     ) -> ActionValidationResult:
+        """One-call convenience wrapper: runs scope check, then the hard
+        block check, then the manual-approval check, in that order, and
+        returns as soon as one of them decides the outcome."""
         target_result = self.validate_target_in_scope(
             policy, identifier=action.target_identifier, target_type=action.target_type
         )

@@ -51,18 +51,23 @@ def create_program(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> ProgramRead:
+    """Registers a new bug-bounty program with its scope policy. This is
+    step 1 of the recon pipeline: nothing else (targets, hypotheses) can
+    exist without a program to belong to."""
     program = ProgramService(db, audit).create(payload, owner=user.username)
     return ProgramRead.model_validate(program)
 
 
 @router.get("/programs", response_model=list[ProgramRead])
 def list_programs(db: Session = Depends(get_db)) -> list[ProgramRead]:
+    """Lists every program, newest first."""
     programs = ProgramService(db, AuditLogger(db)).list_all()
     return [ProgramRead.model_validate(p) for p in programs]
 
 
 @router.get("/programs/{program_id}", response_model=ProgramRead)
 def get_program(program_id: int, db: Session = Depends(get_db)) -> ProgramRead:
+    """Fetches one program by id, 404 if it doesn't exist."""
     program = ProgramService(db, AuditLogger(db)).get(program_id)
     return ProgramRead.model_validate(program)
 
@@ -75,6 +80,10 @@ def create_target(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> TargetRead:
+    """Registers a target under a program. The target is always persisted
+    (even out-of-scope, for visibility/audit) but is checked against the
+    program's scope policy on creation - see TargetService.create - and
+    every downstream action refuses an out-of-scope target."""
     program_service = ProgramService(db, audit)
     program = program_service.get(program_id)
     target = TargetService(db, audit).create(program, payload, actor=user.username)
@@ -83,6 +92,7 @@ def create_target(
 
 @router.get("/programs/{program_id}/targets", response_model=list[TargetRead])
 def list_targets(program_id: int, db: Session = Depends(get_db)) -> list[TargetRead]:
+    """Lists every target registered under a program."""
     targets = TargetService(db, AuditLogger(db)).list_for_program(program_id)
     return [TargetRead.model_validate(t) for t in targets]
 
@@ -130,6 +140,10 @@ def create_hypothesis(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> HypothesisRead:
+    """Records a hypothesis (a suspected finding, not yet acted on) against
+    a target. Fails if the target is out of scope - see
+    HypothesisService.create. Starts life as DRAFT and must go through
+    request_approval + approve before it can be executed."""
     target = TargetService(db, audit).get(target_id)
     hypothesis = HypothesisService(db, audit).create(target, payload, actor=user.username)
     return HypothesisRead.model_validate(hypothesis)
@@ -137,12 +151,14 @@ def create_hypothesis(
 
 @router.get("/hypotheses/{hypothesis_id}", response_model=HypothesisRead)
 def get_hypothesis(hypothesis_id: int, db: Session = Depends(get_db)) -> HypothesisRead:
+    """Fetches one hypothesis by id, 404 if it doesn't exist."""
     hypothesis = HypothesisService(db, AuditLogger(db)).get(hypothesis_id)
     return HypothesisRead.model_validate(hypothesis)
 
 
 @router.get("/programs/{program_id}/hypotheses", response_model=list[HypothesisRead])
 def list_hypotheses(program_id: int, db: Session = Depends(get_db)) -> list[HypothesisRead]:
+    """Lists every hypothesis under a program, newest first."""
     hypotheses = HypothesisService(db, AuditLogger(db)).list_for_program(program_id)
     return [HypothesisRead.model_validate(h) for h in hypotheses]
 
@@ -151,6 +167,7 @@ def list_hypotheses(program_id: int, db: Session = Depends(get_db)) -> list[Hypo
 def list_hypothesis_executions(
     hypothesis_id: int, db: Session = Depends(get_db)
 ) -> list[ExecutionRead]:
+    """Lists every execution attempt queued for a hypothesis, newest first."""
     executions = ExecutionService(db, AuditLogger(db), EvidenceStore(db)).list_for_hypothesis(
         hypothesis_id
     )
@@ -165,6 +182,10 @@ def request_approval(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> ApprovalRead:
+    """Sends a hypothesis for human review - the actual human-in-the-loop
+    gate, backed by seclab.security.approval.ApprovalWorkflowService. No
+    execution can be queued until this approval is granted (see
+    queue_execution's evaluate_execution_gate check)."""
     hypothesis = HypothesisService(db, audit).get(hypothesis_id)
     approval = ApprovalService(db, audit).request(
         hypothesis,
@@ -177,6 +198,8 @@ def request_approval(
 
 @router.get("/approvals/pending", response_model=list[ApprovalRead])
 def list_pending_approvals(db: Session = Depends(get_db)) -> list[ApprovalRead]:
+    """Lists every approval request still awaiting a human decision, across
+    all programs - this is what backs the dashboard's Approval Queue."""
     approvals = ApprovalService(db, AuditLogger(db)).list_pending()
     return [ApprovalRead.model_validate(a) for a in approvals]
 
@@ -189,6 +212,8 @@ def approve(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> ApprovalRead:
+    """Approves a pending request. Self-approval and under-ranked approvers
+    are rejected by the underlying workflow service, not here."""
     decided = ApprovalService(db, audit).decide(
         approval_id, approve=True, rationale=payload.rationale, approver=user
     )
@@ -203,6 +228,8 @@ def reject(
     audit: AuditLogger = Depends(get_audit),
     user: User = Depends(get_current_user),
 ) -> ApprovalRead:
+    """Rejects a pending request, ending that hypothesis's approval cycle
+    (a new one must be requested to try again)."""
     decided = ApprovalService(db, audit).decide(
         approval_id, approve=False, rationale=payload.rationale, approver=user
     )
@@ -218,6 +245,10 @@ def queue_execution(
     evidence: EvidenceStore = Depends(get_evidence),
     user: User = Depends(get_current_user),
 ) -> ExecutionRead:
+    """Queues an execution for an approved hypothesis. Blocked with 403 if
+    no valid human approval exists - this is the enforcement point for the
+    "nothing executes without approval" guarantee, see
+    ExecutionService.queue."""
     hypothesis = HypothesisService(db, audit).get(hypothesis_id)
     execution = ExecutionService(db, audit, evidence).queue(
         hypothesis, payload, requested_by=user.username
@@ -234,6 +265,9 @@ def complete_execution(
     evidence: EvidenceStore = Depends(get_evidence),
     user: User = Depends(get_current_user),
 ) -> FindingRead:
+    """Marks an execution as completed, stores its output as evidence, and
+    records the resulting Finding - this is the terminal step of the recon
+    pipeline for one hypothesis."""
     service = ExecutionService(db, audit, evidence)
     execution = service.get(execution_id)
     finding = service.complete(execution, payload, actor=user.username)
@@ -242,5 +276,6 @@ def complete_execution(
 
 @router.get("/programs/{program_id}/findings", response_model=list[FindingRead])
 def list_findings(program_id: int, db: Session = Depends(get_db)) -> list[FindingRead]:
+    """Lists every finding recorded under a program."""
     findings = FindingService(db).list_for_program(program_id)
     return [FindingRead.model_validate(f) for f in findings]
