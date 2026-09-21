@@ -8,6 +8,8 @@ import { useHealthQuery } from "@/lib/api/hooks";
 
 const pageLabels: Record<string, string> = {
   "/": "Lab overview",
+  "/docs": "Como funciona",
+  "/onboarding": "Primeiros passos",
   "/phantom": "Lookalike-domain analysis",
   "/programs": "Recon program inventory",
   "/approvals": "Human approval workflow",

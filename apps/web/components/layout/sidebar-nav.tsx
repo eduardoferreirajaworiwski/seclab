@@ -15,6 +15,12 @@ const sections = [
         description: "Lab-wide operating view",
         glyph: "01",
       },
+      {
+        href: "/docs",
+        label: "Como funciona",
+        description: "Arquitetura, módulos e autenticação explicados",
+        glyph: "00",
+      },
     ],
   },
   {

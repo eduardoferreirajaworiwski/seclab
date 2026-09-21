@@ -1,9 +1,33 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Topbar } from "@/components/layout/topbar";
+import { useConnectionStatus } from "@/lib/api/connection-status";
+
+// Routes reachable without a working gateway connection: onboarding itself
+// (obviously), and /docs, which is static explanatory content useful to
+// someone who hasn't configured anything yet (see app/docs/page.tsx).
+const PUBLIC_ROUTES = new Set(["/onboarding", "/docs"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const { status } = useConnectionStatus();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isPublicRoute = PUBLIC_ROUTES.has(pathname);
+  const needsOnboarding =
+    (status === "no_key" || status === "invalid_key" || status === "unreachable") &&
+    !isPublicRoute;
+
+  useEffect(() => {
+    if (needsOnboarding) {
+      router.replace("/onboarding");
+    }
+  }, [needsOnboarding, router]);
+
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1700px] gap-6 px-4 py-4 md:px-6 lg:px-8">
       <aside className="hidden w-[290px] shrink-0 lg:block">
@@ -46,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mt-4 lg:hidden">
           <SidebarNav mobile />
         </div>
-        <main className="mt-6 pb-8">{children}</main>
+        <main className="mt-6 pb-8">{needsOnboarding ? null : children}</main>
       </div>
     </div>
   );

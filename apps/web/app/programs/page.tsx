@@ -26,7 +26,7 @@ export default function ProgramsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Recon programs"
-        description="Every target, hypothesis, and execution lives under a program with an explicit scope policy. No allowlist means nothing is in scope - by design."
+        description="Every target, hypothesis, and execution lives under a program with an explicit scope policy. No allowlist means nothing is in scope - by design. Fluxo dentro de um programa: Target (checado contra o escopo) → Hipótese → Aprovação humana → Execução → Finding."
       />
 
       <Card>
