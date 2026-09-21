@@ -1,68 +1,71 @@
 from __future__ import annotations
 
-import json
 import logging
 
+from seclab.core.ai_provider import AIProviderService
 from seclab.core.config import Settings
-from seclab.core.http import HttpProvider
 
 from seclab_phantom.models import AnalystSummary, ScoredAsset, TargetProfile
 
 logger = logging.getLogger(__name__)
 
+SYSTEM_PROMPT = (
+    "You are a security analyst assistant. Summarize only the structured "
+    "evidence provided. Do not invent evidence, confidence, attribution, or "
+    "unseen infrastructure. Output a strict JSON object with keys: headline, "
+    "executive_summary, analyst_notes (list of strings), recommended_actions "
+    "(list of strings), grounding_notes (list of strings)."
+)
+
 
 class AnalystSummaryService:
-    def __init__(self, settings: Settings) -> None:
+    """Turns a scored list of lookalike-domain assets into an analyst-facing
+    narrative. Always computes a deterministic summary first (see
+    _build_deterministic_summary) and only replaces it with an AI-generated
+    one when offline_mode is off, an AI provider is configured, and that
+    provider actually returns something parseable - so this never blocks or
+    breaks the phantom pipeline on an AI outage."""
+
+    def __init__(self, settings: Settings, ai: AIProviderService | None = None) -> None:
         self.settings = settings
-        self.http = HttpProvider(settings)
+        self.ai = ai or AIProviderService(settings)
 
     async def build_summary(
         self, target: TargetProfile, assets: list[ScoredAsset], offline_mode: bool
     ) -> AnalystSummary:
         fallback = _build_deterministic_summary(target, assets)
-        if offline_mode or not self.settings.openai_api_key:
-            return fallback
 
         payload = _build_ai_payload(target, assets)
-        headers = {
-            "Authorization": f"Bearer {self.settings.openai_api_key.get_secret_value()}",
-            "Content-Type": "application/json",
-        }
-        try:
-            response = await self.http.post_json(
-                f"{self.settings.openai_base_url}/chat/completions",
-                json_body={
-                    "model": self.settings.openai_model,
-                    "temperature": 0.2,
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a security analyst assistant. Summarize only the "
-                                "structured evidence provided. Do not invent evidence, "
-                                "confidence, attribution, or unseen infrastructure."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": (
-                                "Produce a JSON object with keys: headline, executive_summary, "
-                                "analyst_notes, recommended_actions, grounding_notes. Base the "
-                                "output strictly on this evidence:\n"
-                                f"{json.dumps(payload, indent=2)}"
-                            ),
-                        },
-                    ],
-                },
-                headers=headers,
-            )
-            return _parse_ai_summary(response, fallback)
-        except Exception as exc:
-            logger.warning(
-                "ai_summary_failed", extra={"target": target.normalized_target, "error": str(exc)}
-            )
+        result = await self.ai.generate_json(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=(
+                "Base the output strictly on this evidence:\n" + _dump(payload)
+            ),
+            offline_mode=offline_mode,
+        )
+        if result is None:
             return fallback
+
+        parsed = self.ai.parse_json(result.text)
+        if parsed is None:
+            return fallback
+
+        return AnalystSummary(
+            headline=parsed.get("headline", fallback.headline),
+            executive_summary=parsed.get("executive_summary", fallback.executive_summary),
+            analyst_notes=_coerce_list(parsed.get("analyst_notes"), fallback.analyst_notes),
+            recommended_actions=_coerce_list(
+                parsed.get("recommended_actions"), fallback.recommended_actions
+            ),
+            grounding_notes=_coerce_list(parsed.get("grounding_notes"), fallback.grounding_notes),
+            model_source=result.provider.value,
+        )
+
+
+def _dump(payload: dict[str, object]) -> str:
+    import json
+
+    return json.dumps(payload, indent=2)
 
 
 def _build_ai_payload(target: TargetProfile, assets: list[ScoredAsset]) -> dict[str, object]:
@@ -85,38 +88,6 @@ def _build_ai_payload(target: TargetProfile, assets: list[ScoredAsset]) -> dict[
             "medium_priority": sum(1 for asset in assets if asset.priority == "medium"),
         },
     }
-
-
-def _parse_ai_summary(response: dict[str, object], fallback: AnalystSummary) -> AnalystSummary:
-    choices = response.get("choices", [])
-    if not isinstance(choices, list) or not choices:
-        return fallback
-    first_choice = choices[0]
-    if not isinstance(first_choice, dict):
-        return fallback
-    message = first_choice.get("message", {})
-    if not isinstance(message, dict):
-        return fallback
-    content = message.get("content", "{}")
-    if isinstance(content, list):
-        text_parts = [item.get("text", "") for item in content if isinstance(item, dict)]
-        content = "".join(part for part in text_parts if isinstance(part, str))
-    if not isinstance(content, str):
-        return fallback
-    try:
-        parsed = json.loads(content)
-    except json.JSONDecodeError:
-        return fallback
-    return AnalystSummary(
-        headline=parsed.get("headline", fallback.headline),
-        executive_summary=parsed.get("executive_summary", fallback.executive_summary),
-        analyst_notes=_coerce_list(parsed.get("analyst_notes"), fallback.analyst_notes),
-        recommended_actions=_coerce_list(
-            parsed.get("recommended_actions"), fallback.recommended_actions
-        ),
-        grounding_notes=_coerce_list(parsed.get("grounding_notes"), fallback.grounding_notes),
-        model_source=f"openai:{response.get('model', fallback.model_source)}",
-    )
 
 
 def _coerce_list(value: object, fallback: list[str]) -> list[str]:

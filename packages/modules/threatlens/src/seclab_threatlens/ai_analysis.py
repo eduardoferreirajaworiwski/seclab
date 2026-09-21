@@ -3,62 +3,70 @@ from __future__ import annotations
 import json
 import logging
 
+from seclab.core.ai_provider import AIProviderService
 from seclab.core.config import Settings
-from seclab.core.http import HttpProvider
 
 from seclab_threatlens.models import DigestSummary, ThreatArticle
 
 logger = logging.getLogger(__name__)
 
+SYSTEM_PROMPT = (
+    "You are a security analyst. Using ONLY the structured articles and "
+    "vector tags given, write a JSON object with keys: headline, "
+    "executive_summary, vector_breakdown (list of strings), "
+    "notable_incidents (list of strings), recommended_actions (list of "
+    "strings). Do not invent attacks, attribution, or details not present "
+    "in the input."
+)
+
 
 class DigestNarrativeService:
-    def __init__(self, settings: Settings) -> None:
+    """Turns a batch of tagged threat articles into an analyst-facing weekly
+    narrative. Always computes a deterministic summary first (see
+    _build_deterministic_summary) and only replaces it with an AI-generated
+    one when offline_mode is off, an AI provider is configured, and that
+    provider actually returns something parseable - so a Gemini/OpenAI
+    outage never blocks the digest from being produced."""
+
+    def __init__(self, settings: Settings, ai: AIProviderService | None = None) -> None:
         self.settings = settings
-        self.http = HttpProvider(settings)
+        self.ai = ai or AIProviderService(settings)
 
     async def build_summary(
         self, articles: list[ThreatArticle], offline_mode: bool
     ) -> DigestSummary:
         fallback = _build_deterministic_summary(articles)
-        if offline_mode or not self.settings.gemini_api_key or not articles:
+        if not articles:
             return fallback
 
         payload = _build_ai_payload(articles)
-        url = (
-            f"{self.settings.gemini_base_url}/models/"
-            f"{self.settings.gemini_model}:generateContent"
-            f"?key={self.settings.gemini_api_key.get_secret_value()}"
+        result = await self.ai.generate_json(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=json.dumps(payload, indent=2),
+            offline_mode=offline_mode,
         )
-        body = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [
-                        {
-                            "text": (
-                                "You are a security analyst. Using ONLY the structured "
-                                "articles and vector tags below, write a JSON object with "
-                                "keys: headline, executive_summary, vector_breakdown "
-                                "(list of strings), notable_incidents (list of strings), "
-                                "recommended_actions (list of strings). Do not invent "
-                                "attacks, attribution, or details not present in the "
-                                "input.\n\n" + json.dumps(payload, indent=2)
-                            )
-                        }
-                    ],
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.2,
-                "responseMimeType": "application/json",
-            },
-        }
-        try:
-            response = await self.http.post_json(url, json_body=body)
-            return _parse_ai_summary(response, fallback)
-        except Exception as exc:
-            logger.warning("threatlens_ai_summary_failed", extra={"error": str(exc)})
+        if result is None:
             return fallback
+
+        parsed = self.ai.parse_json(result.text)
+        if parsed is None:
+            return fallback
+
+        return DigestSummary(
+            headline=parsed.get("headline", fallback.headline),
+            executive_summary=parsed.get("executive_summary", fallback.executive_summary),
+            vector_breakdown=_coerce_list(
+                parsed.get("vector_breakdown"), fallback.vector_breakdown
+            ),
+            notable_incidents=_coerce_list(
+                parsed.get("notable_incidents"), fallback.notable_incidents
+            ),
+            recommended_actions=_coerce_list(
+                parsed.get("recommended_actions"), fallback.recommended_actions
+            ),
+            grounding_notes=fallback.grounding_notes,
+            model_source=result.provider.value,
+        )
 
 
 def _build_ai_payload(articles: list[ThreatArticle]) -> dict[str, object]:
@@ -76,39 +84,6 @@ def _build_ai_payload(articles: list[ThreatArticle]) -> dict[str, object]:
             for article in articles[:30]
         ],
     }
-
-
-def _parse_ai_summary(response: dict[str, object], fallback: DigestSummary) -> DigestSummary:
-    candidates = response.get("candidates", [])
-    if not isinstance(candidates, list) or not candidates:
-        return fallback
-    first = candidates[0]
-    if not isinstance(first, dict):
-        return fallback
-    content = first.get("content", {})
-    parts = content.get("parts", []) if isinstance(content, dict) else []
-    text = "".join(
-        part.get("text", "") for part in parts if isinstance(part, dict)
-    )
-    if not text:
-        return fallback
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        return fallback
-    return DigestSummary(
-        headline=parsed.get("headline", fallback.headline),
-        executive_summary=parsed.get("executive_summary", fallback.executive_summary),
-        vector_breakdown=_coerce_list(parsed.get("vector_breakdown"), fallback.vector_breakdown),
-        notable_incidents=_coerce_list(
-            parsed.get("notable_incidents"), fallback.notable_incidents
-        ),
-        recommended_actions=_coerce_list(
-            parsed.get("recommended_actions"), fallback.recommended_actions
-        ),
-        grounding_notes=fallback.grounding_notes,
-        model_source=f"gemini:{response.get('modelVersion', fallback.model_source)}",
-    )
 
 
 def _coerce_list(value: object, fallback: list[str]) -> list[str]:
